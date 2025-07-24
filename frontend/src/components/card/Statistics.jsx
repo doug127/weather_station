@@ -1,109 +1,169 @@
 import { useState, useEffect } from "react";
 import Chart from "react-apexcharts";
+import { api } from "../../api/apiRoutes";
 
 export const Statistics = () => {
   const [pieOptions, setPieOptions] = useState({});
   const [pieSeries, setPieSeries] = useState([]);
   const [lineOptions, setLineOptions] = useState({});
   const [lineSeries, setLineSeries] = useState([]);
-
-  // --- Gráfica 1: Usuarios ---
-  const usersOptions = {
-    chart: {
-      type: "area",
-      toolbar: { show: false },
-      fontFamily: "Inter, sans-serif",
-    },
-    tooltip: { enabled: true, x: { show: false } },
-    fill: {
-      type: "gradient",
-      gradient: {
-        shade: "light",
-        opacityFrom: 0.55,
-        opacityTo: 0,
-        gradientToColors: ["#1C64F2"],
-      },
-    },
-    dataLabels: { enabled: false },
-    stroke: { width: 6 },
-    grid: { show: false },
-    xaxis: {
-      categories: [
-        "01 February",
-        "02 February",
-        "03 February",
-        "04 February",
-        "05 February",
-        "06 February",
-        "07 February",
-      ],
-      labels: { show: false },
-      axisBorder: { show: false },
-      axisTicks: { show: false },
-    },
-    yaxis: { show: false },
-  };
-
-  const usersSeries = [
+  const [data, setData] = useState([]);
+  const [usersOptions, setUsersOptions] = useState({
+    chart: { type: "area" },
+    xaxis: { categories: [] }
+  });
+  const [sensorInfo, setSensorInfo] = useState({
+    sensor: '',
+    variable: '',
+    unit: '',
+    lastUpdated: ''
+  });
+  const [usersSeries, setUsersSeries] = useState([
     {
-      name: "New users",
-      data: [6500, 6418, 6456, 6526, 6356, 6456],
-      color: "#1A56DB",
+      name: "Loading...",
+      data: [],
     },
-  ];
+  ]);
+  
+  useEffect( () => {
+    const fetchData = async () => {
+      try {
+        const response = await api.get('/value/filtered?sensor=Sensor Temperatura Máxima&startDate=2025-06-01&sort=DESC');         
+        const sensorData = response.data.data[0];
 
+        const values = sensorData?.values || [];
+
+        const dates = values.map(v => v.date);
+        const seriesData = values.map(v => v.value);
+        
+        setUsersOptions({
+          chart: {
+            type: "area",
+            toolbar: { show: false },
+            fontFamily: "Inter, sans-serif",
+          },
+          tooltip: { enabled: true, x: { show: false } },
+          fill: {
+            type: "gradient",
+            gradient: {
+              shade: "light",
+              opacityFrom: 0.75,
+              opacityTo: 0,
+              gradientToColors: ["#164cb7ff"],
+            },
+          },
+          dataLabels: { enabled: false },
+          stroke: { width: 4 },
+          grid: { show: false },
+          xaxis: {
+            categories: dates,
+            labels: { show: true }, //* Acomodar fechas para que se muestre la inicial y la final 
+            axisBorder: { show: false },
+            axisTicks: { show: false },
+          },
+          yaxis: { show: true },
+        });
+
+        setUsersSeries([
+          {
+            name: sensorData.sensor,
+            data: seriesData,
+            color: "#1A56DB",
+          },
+        ]);
+
+        setSensorInfo({
+          sensor: sensorData.sensor,
+          variable: sensorData.variable,
+          unit: sensorData.unit,
+          lastUpdated: response.data.lastUpdated
+        });
+
+        setData(response.data.data);
+        console.log(response.data);
+      } catch (error) {
+        console.error('Error al obtener datos:', error);
+      }
+    };
+
+    fetchData();
+  },[])
+
+  const [salesOptions, setSalesOptions] = useState({});
+  const [salesSeries, setSalesSeries] = useState([]);
   // --- Gráfica 2: Ventas ---
-  const salesOptions = {
-    chart: {
-      height: "100%",
-      maxWidth: "100%",
-      type: "area",
-      fontFamily: "Inter, sans-serif",
-      toolbar: { show: false },
-    },
-    tooltip: { enabled: true, x: { show: false } },
-    legend: { show: false },
-    fill: {
-      type: "gradient",
-      gradient: {
-        opacityFrom: 0.55,
-        opacityTo: 0,
-        shade: "#1C64F2",
-        gradientToColors: ["#1C64F2"],
-      },
-    },
-    dataLabels: { enabled: false },
-    stroke: { width: 6 },
-    grid: { show: false },
-    xaxis: {
-      categories: [
-        "01 February",
-        "02 February",
-        "03 February",
-        "04 February",
-        "05 February",
-        "06 February",
-        "07 February",
-      ],
-      labels: { show: false },
-      axisBorder: { show: false },
-      axisTicks: { show: false },
-    },
-    yaxis: { show: false },
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await api.get('/value/filtered?sort=ASC&startDate=2025-06-01&sensors=Sensor Temperatura Máxima,Sensor Temperatura Mínima, Sensor Temperatura Promedio');
 
-  const salesSeries = [
-    {
-      name: "Developer Edition",
-      data: [1500, 1418, 1456, 1526, 1356, 1256],
-      color: "#1A56DB",
-    },
-    {
-      name: "Designer Edition",
-      data: [643, 413, 765, 412, 1423, 1731],
-      color: "#7E3BF2",
-    },
-  ];
+        const sensorsData = response.data.data;
+
+        // Obtener fechas únicas en orden
+        const allDates = new Set();
+        sensorsData.forEach(sensorGroup => {
+          sensorGroup.values.forEach(v => allDates.add(v.date));
+        });
+        const sortedDates = Array.from(allDates).sort();
+
+        // Armar series
+        const series = sensorsData.map((sensorGroup, idx) => {
+          const colorPalette = ["#1A56DB", "#7E3BF2", "#10B981", "#F59E0B"];
+          const color = colorPalette[idx % colorPalette.length];
+
+          const dateToValue = {};
+          sensorGroup.values.forEach(v => {
+            dateToValue[v.date] = v.value;
+          });
+
+          const data = sortedDates.map(date => dateToValue[date] ?? null); // null si no hay valor ese día
+
+          return {
+            name: sensorGroup.sensor,
+            data,
+            color,
+          };
+        });
+
+        setSalesOptions({
+          chart: {
+            height: "100%",
+            maxWidth: "100%",
+            type: "area",
+            fontFamily: "Inter, sans-serif",
+            toolbar: { show: false },
+          },
+          tooltip: { enabled: true, x: { show: false } },
+          legend: { show: true },
+          fill: {
+            type: "gradient",
+            gradient: {
+              opacityFrom: 0.55,
+              opacityTo: 0,
+              shade: "#1450c9ff",
+              gradientToColors: ["#1C64F2"],
+            },
+          },
+          dataLabels: { enabled: false },
+          stroke: { width: 6 },
+          grid: { show: false },
+          xaxis: {
+            categories: sortedDates,
+            labels: { show: true },
+            axisBorder: { show: false },
+            axisTicks: { show: false },
+          },
+          yaxis: { show: true },
+        });
+
+        setSalesSeries(series);
+      } catch (error) {
+        console.error("Error al obtener datos para la gráfica:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   // --- Gráfica 3: Leads ---
   const leadsOptions = {
@@ -168,6 +228,8 @@ export const Statistics = () => {
     },
     yaxis: { show: false },
   };
+
+
 
   // --- Gráfica 4: Profit/Income/Expense ---
   const profitOptions = {
@@ -291,22 +353,25 @@ export const Statistics = () => {
     <div>
       <div className="grid gap-4 p-4 grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
         {/* Tarjeta Users */}
+        
         <div className="bg-white rounded-lg shadow-lg border border-gray-300  p-4 md:p-6">
           <h5 className="leading-none text-3xl font-bold text-gray-900 pb-2">
-            32.4k
+            {sensorInfo.sensor}
           </h5>
-          <p className="text-base font-normal text-gray-500">Users this week</p>
+          <p className="text-base font-normal text-gray-500">{sensorInfo.variable}</p>
           <div className="mt-4 object-contain">
-            <Chart
-              options={usersOptions}
-              series={usersSeries}
-              type="area"
-              height={300}
-            />
+            {usersSeries[0]?.data?.length > 0 && (
+              <Chart
+                options={usersOptions}
+                series={usersSeries}
+                type="area"
+                height={300}
+              />
+            )}
           </div>
           <div className="p-2 border-t order-gray-200 text-gray-400">
             <p>
-              <i className="fa-solid fa-clock p-2"></i> updated 4 min ago
+              <i className="fa-solid fa-clock p-2"></i>last updated {sensorInfo.lastUpdated}
             </p>
           </div>
         </div>
@@ -406,6 +471,23 @@ export const Statistics = () => {
           />
         </div>
       </div>
+
+      {/* <div>
+        <h1>Datos del backend:</h1>
+          {data.map((seensorObj, index)=> (
+            <div key={index} className='p-5'>
+                <p>SENSOR: {seensorObj.sensor}</p>
+                <p>CODE: {seensorObj.code}</p>
+                {seensorObj.values.map((valueSensor, indexValue)=>(
+                    <div key={indexValue}>
+                      <p>VALUES: </p>
+                      <li>Value: {JSON.stringify(valueSensor.value)}</li>
+                      <li>Moment: {JSON.stringify(valueSensor.value)}</li>
+                    </div>
+                ))}
+            </div> 
+          ))}
+        </div> */}
     </div>
   );
 };

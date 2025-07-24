@@ -10,22 +10,7 @@ import {motion} from 'framer-motion'
 
 
 export const Home = () => {
-const [data, setData] = useState([]);
 const {optionBanner, setOptionBanner} = useContext(Context);
-
-useEffect( () => {
-    const fetchData = async () => {
-      try {
-        const response = await api.get('/meta/paginated'); 
-        setData(response.data.data);
-        console.log(response.data);
-      } catch (error) {
-        console.error('Error al obtener datos:', error);
-      }
-    };
-
-    fetchData();
-},[])
  
     return(
         <div className="flex h-auto bg-gray-100">
@@ -67,23 +52,6 @@ useEffect( () => {
              <Table/>
            </motion.div>
             }
-
-           {/* <div>
-            <h1>Datos del backend:</h1>
-              {data.map((seensorObj, index)=> (
-                <div key={index} className='p-5'>
-                    <p>SENSOR: {seensorObj.sensor}</p>
-                    <p>CODE: {seensorObj.code}</p>
-                    {seensorObj.values.map((valueSensor, indexValue)=>(
-                        <div key={indexValue}>
-                          <p>VALUES: </p>
-                          <li>Value: {JSON.stringify(valueSensor.value)}</li>
-                          <li>Moment: {JSON.stringify(valueSensor.value)}</li>
-                        </div>
-                    ))}
-                </div> 
-              ))}
-            </div> */}
 
             <Footer/>
            </div>
