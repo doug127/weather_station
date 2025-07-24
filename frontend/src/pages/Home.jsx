@@ -10,13 +10,12 @@ import {motion} from 'framer-motion'
 
 
 export const Home = () => {
-const [data, setData] = useState([]);
 const {optionBanner, setOptionBanner} = useContext(Context);
 
 useEffect( () => {
     const fetchData = async () => {
       try {
-        const response = await api.get('/value/paginated'); 
+        const response = await api.get('/meta/paginated'); 
         setData(response.data.data);
         console.log(response.data);
       } catch (error) {
@@ -68,7 +67,7 @@ useEffect( () => {
            </motion.div>
             }
 
-           <div>
+           {/* <div>
             <h1>Datos del backend:</h1>
               {data.map((seensorObj, index)=> (
                 <div key={index} className='p-5'>
@@ -83,7 +82,7 @@ useEffect( () => {
                     ))}
                 </div> 
               ))}
-            </div>
+            </div> */}
 
             <Footer/>
            </div>

@@ -2,6 +2,7 @@ import {Sensor, Value, Moment, Medition, Variable} from '../models/index.js';
 import { getWeatherData } from '../services/meteostat.js';
 import {sequelize} from '../server/db.js'; 
 import { Op } from 'sequelize';
+import { update } from './sensor.controller.js';
 
 export const insertMeteostatData = async (req, res) => {
     try {
@@ -101,8 +102,8 @@ export const paginated = async (req, res) => {
 
 export const filteredValues = async (req, res) => {
   try {
-    const { sensor, variable, limit, minValue, maxValue, startDate, endDate, sort } = req.query;
-
+    const { sensors, sensor, variable, limit, minValue, maxValue, startDate, endDate, sort } = req.query;
+    let lastUpdated = null;
     const whereClause = {};
     const sortOrder = sort?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
@@ -120,6 +121,21 @@ export const filteredValues = async (req, res) => {
     } else if (endDate) {
       meditionWhere.date = { [Op.lte]: endDate };
     }
+    let sensorWhere;
+
+    if (sensors) {
+      const sensorList = Array.isArray(sensors)
+        ? sensors
+        : sensors.split(',').map(s => s.trim());
+
+      sensorWhere = {
+        name: {
+          [Op.or]: sensorList.map(name => ({ [Op.iLike]: `%${name}%` }))
+        }
+      };
+    } else if (sensor) {
+      sensorWhere = { name: { [Op.iLike]: `%${sensor}%` } };
+    }
 
     const includeOptions = [
       {
@@ -130,8 +146,8 @@ export const filteredValues = async (req, res) => {
           {
             model: Sensor,
             attributes: ['name', 'code'],
-            where: sensor ? { name: { [Op.iLike]: `%${sensor}%` } } : undefined,
-            required: sensor || variable ? true : false,
+            where: sensorWhere,
+            required: sensorWhere || variable ? true : false,
             include: [
               {
                 model: Variable,
@@ -157,18 +173,40 @@ export const filteredValues = async (req, res) => {
       limit: limit ? parseInt(limit) : undefined
     });
 
-    // Formatear respuesta
-    const formattedValues = values.map(v => ({
-      value: v.value,
-      hour: v.Moment.hour,
-      date: v.Medition.date,
-      sensor: v.Medition.Sensor?.name,
-      variable: v.Medition.Sensor?.Variable?.name,
-      unit: v.Medition.Sensor?.Variable?.unit
-    }));
+    const grouped = {};
+
+    for (const v of values) {
+      const sensor = v.Medition.Sensor?.name;
+      const variable = v.Medition.Sensor?.Variable?.name;
+      const unit = v.Medition.Sensor?.Variable?.unit;
+      const key = `${sensor}|${variable}|${unit}`;
+
+      if (!grouped[key]) {
+        grouped[key] = {
+          sensor,
+          variable,
+          unit,
+          values: []
+        };
+      }
+
+      grouped[key].values.push({
+        value: v.value,
+        hour: v.Moment.hour,
+        date: v.Medition.date,
+        updatedAt: v.updatedAt
+      });
+
+      if (!lastUpdated || new Date(v.updatedAt) > new Date(lastUpdated)) {
+        lastUpdated = v.updatedAt;
+      }
+    }
+
+    const formattedValues = Object.values(grouped);
 
     res.json({
-      count: formattedValues.length,
+      count: values.length,
+      lastUpdated,
       data: formattedValues
     });
 
