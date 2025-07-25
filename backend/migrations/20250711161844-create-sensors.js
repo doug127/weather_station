@@ -20,15 +20,9 @@ export const up = async (queryInterface, Sequelize) => {
       allowNull: false,
       unique: true
     },
-    createdAt: {
-      type: Sequelize.DATE,
+    serial: {
+      type: Sequelize.STRING,
       allowNull: false,
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-    },
-    updatedAt: {
-      type: Sequelize.DATE,
-      allowNull: false,
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
     },
     variableId: {
       type: Sequelize.INTEGER,
@@ -39,15 +33,16 @@ export const up = async (queryInterface, Sequelize) => {
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL'
     },
-    equipmentId: {
-      type: Sequelize.INTEGER,
-      references: {
-        model: 'equipment',
-        key: 'id'
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'CASCADE'
-    }
+    createdAt: {
+      type: Sequelize.DATE,
+      allowNull: false,
+      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+    },
+    updatedAt: {
+      type: Sequelize.DATE,
+      allowNull: false,
+      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+    },
   });
 };
 

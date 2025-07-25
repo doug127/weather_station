@@ -3,14 +3,9 @@ import { Sensor } from "./Sensor.js";
 import { Medition } from "./Medition.js";
 import { Value } from "./Value.js";
 import { Moment } from "./Moment.js";
-import { Equipment } from "./Equipment.js";
 
 //? Variable 1-1 Sensor
 Sensor.belongsTo(Variable, { foreignKey: 'variableId' });
-
-//? Sensor M-1 Equipment
-Equipment.hasMany(Sensor, { foreignKey: 'equipmentId' });
-Sensor.belongsTo(Equipment, { foreignKey: 'equipmentId' });
 
 // ? Sensor 1-M Medition
 Medition.belongsTo(Sensor, { foreignKey: 'sensorId' });
@@ -28,6 +23,5 @@ export {
   Sensor,
   Medition,
   Value,
-  Moment,
-  Equipment
+  Moment
 }
