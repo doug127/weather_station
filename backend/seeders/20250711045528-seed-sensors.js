@@ -6,18 +6,9 @@
 export async function up(queryInterface, Sequelize) {
   const now = new Date();
 
-  const [equipments] = await queryInterface.sequelize.query(
-    `SELECT id, serial FROM "equipment";`
-  );
-
   const [variables] = await queryInterface.sequelize.query(
     `SELECT id, name FROM "variables";`
   );
-
-  const equipmentMap = {};
-  equipments.forEach(eq => {
-    equipmentMap[eq.serial] = eq.id;
-  });
 
   const variableMap = {};
   variables.forEach(v => {
@@ -69,9 +60,8 @@ export async function up(queryInterface, Sequelize) {
     }
   ];
 
-  const sensors = sensorsData.map(({ serial, variable, ...rest }) => ({
+  const sensors = sensorsData.map(({ variable, ...rest }) => ({
     ...rest,
-    equipmentId: equipmentMap[serial],
     variableId: variableMap[variable],
     createdAt: now,
     updatedAt: now

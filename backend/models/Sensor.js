@@ -1,7 +1,6 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../server/db.js";
-import {Equipment} from './Equipment.js';
-import {Variable} from './Variable.js';
+import { Variable } from './Variable.js';
 
 export const Sensor = sequelize.define("Sensor", {
     id: {
@@ -20,14 +19,10 @@ export const Sensor = sequelize.define("Sensor", {
         required: true,
         unique: true,
     },
-    equipmentId: {
-        type: DataTypes.INTEGER,
+    serial: {
+        type: DataTypes.STRING,
         allowNull: false,
         required: true,
-        references: {
-            model: Equipment,
-            key: 'id'
-        }         
     },
     variableId: {
         type: DataTypes.INTEGER,

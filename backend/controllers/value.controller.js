@@ -100,9 +100,9 @@ export const paginated = async (req, res) => {
     }
 }
 
-export const filteredValues = async (req, res) => {
+export const getFilteredValuesData = async (req, res) => {
   try {
-    const { sensors, sensor, variable, limit, minValue, maxValue, startDate, endDate, sort } = req.query;
+    const { sensors, sensor, variable, limit, minValue, maxValue, startDate, endDate, sort } = req;
     let lastUpdated = null;
     const whereClause = {};
     const sortOrder = sort?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
@@ -202,13 +202,11 @@ export const filteredValues = async (req, res) => {
       }
     }
 
-    const formattedValues = Object.values(grouped);
-
-    res.json({
+    return {
       count: values.length,
       lastUpdated,
-      data: formattedValues
-    });
+      data: Object.values(grouped)
+    }
 
   } catch (error) {
     console.error('Error fetching filtered values:', error);
@@ -216,6 +214,16 @@ export const filteredValues = async (req, res) => {
       message: 'Error al obtener valores filtrados',
       error: error.message 
     });
+  }
+}
+
+export const filteredValues = async (req, res) => {
+  try {
+    const result = await getFilteredValuesData(req.query);
+    res.json(result);
+  } catch (error) {
+    console.error('Error en filteredValues', error);
+    res.status(500).json({message: 'Error al obtener valores filtrados'});
   }
 }
 
