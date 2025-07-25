@@ -26,3 +26,5 @@ try {
 } catch (error) {
   console.error('Server error:', error);
 }
+
+// prueba commit
