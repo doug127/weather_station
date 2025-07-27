@@ -24,14 +24,13 @@ export const AddStatistics = () => {
             e.preventDefault();
             try {
                  const response = await api.post('/sensor/create', {
+                     name: valueNombre,
+                     code: valueCodigo,
                      serial: valueSensor,
-                     codigo: valueCodigo,
-                     nombre: valueNombre,
-                     variable: selectedVariable,
-                     unidad: selectedUnidad,
+                     variableId: 1,
                  });
 
-                console.log('datos enviados', Response.data);
+                console.log('datos enviados', response.data);
                
                 setValueSensor("");
                 setValueCodigo("");
