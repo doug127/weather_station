@@ -12,6 +12,20 @@ import { AddStatistics } from '../components/form/addStatistics'
 
 export const Home = () => {
 const {optionBanner, setOptionBanner} = useContext(Context);
+
+useEffect( () => {
+    const fetchData = async () => {
+      try {
+        const response = await api.get('/meta/paginated'); 
+        setData(response.data.data);
+        console.log(response.data);
+      } catch (error) {
+        console.error('Error al obtener datos:', error);
+      }
+    };
+
+    fetchData();
+},[])
  
     return(
         <div className="flex h-auto bg-gray-100">
@@ -54,9 +68,28 @@ const {optionBanner, setOptionBanner} = useContext(Context);
            </motion.div>
             }
 
+<<<<<<< HEAD
             { optionBanner === 'AddStatistics' &&
               <AddStatistics/>
             }
+=======
+           {/* <div>
+            <h1>Datos del backend:</h1>
+              {data.map((seensorObj, index)=> (
+                <div key={index} className='p-5'>
+                    <p>SENSOR: {seensorObj.sensor}</p>
+                    <p>CODE: {seensorObj.code}</p>
+                    {seensorObj.values.map((valueSensor, indexValue)=>(
+                        <div key={indexValue}>
+                          <p>VALUES: </p>
+                          <li>Value: {JSON.stringify(valueSensor.value)}</li>
+                          <li>Moment: {JSON.stringify(valueSensor.value)}</li>
+                        </div>
+                    ))}
+                </div> 
+              ))}
+            </div> */}
+>>>>>>> 13ba50da6f06a56b66844a0eaa59da13fd4d8d57
 
             <Footer/>
            </div>
