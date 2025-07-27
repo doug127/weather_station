@@ -1,10 +1,10 @@
-import {Sensor, Equipment, Variable} from '../models/index.js';
+import {Sensor, Variable} from '../models/index.js';
+import { Op } from 'sequelize';
 
 export const getAll = async (req, res) => {
   try {
     const sensors = await Sensor.findAll({
       include: [
-        { model: Equipment, attributes: ['serial'] },
         { model: Variable, attributes: ['name', 'unit'] }
       ]
     });
@@ -13,7 +13,7 @@ export const getAll = async (req, res) => {
         total: sensors.length,
         data: sensors.map(sensor => ({
           id: sensor.id,
-          serial: sensor.Equipment.serial,
+          serial: sensor.serial,
           name: sensor.name,
           variable: {
             name: sensor.Variable.name,
@@ -34,7 +34,6 @@ export const paginated = async (req, res) => {
     try {
         const { count, rows } = await Sensor.findAndCountAll({
             include: [
-                { model: Equipment, attributes: ['serial'] },
                 { model: Variable, attributes: ['name', 'unit'] }
             ],
             limit,
@@ -51,7 +50,7 @@ export const paginated = async (req, res) => {
             totalPages,
             data: rows.map(sensor => ({
                 id: sensor.id,
-                serial: sensor.Equipment.serial,
+                serial: sensor.serial,
                 name: sensor.name,
                 variable: {
                     name: sensor.Variable.name,
@@ -71,7 +70,6 @@ export const getById = async (req, res) => {
     try {
         const sensor = await Sensor.findByPk(id, {
             include: [
-                { model: Equipment, attributes: ['serial'] },
                 { model: Variable, attributes: ['name', 'unit'] }
             ]
         });
@@ -82,7 +80,7 @@ export const getById = async (req, res) => {
             message: 'Sensor retrieved successfully',
             data: {
                 id: sensor.id,
-                serial: sensor.Equipment.serial,
+                serial: sensor.serial,
                 name: sensor.name,
                 variable: {
                     name: sensor.Variable.name,
@@ -95,14 +93,9 @@ export const getById = async (req, res) => {
     }
 }
 
-export const create = async (req, res) => {
-    const {name, code, variableId, equipmentId} = req.body;
+export const create = async (req, res) => {   
     try {
-        const equipment = await Equipment.findOne({ where: { id: equipmentId } });
-
-        if (!equipment) {
-            return res.status(404).json({ message: `Equipment not found` });
-        }
+        const {name, code, serial, variableId} = req.body;
         
         const variable = await Variable.findByPk(variableId);
         
@@ -110,11 +103,30 @@ export const create = async (req, res) => {
             return res.status(404).json({ message: `Variable not found` });
         }
 
+        const existingSensor = await Sensor.findOne({
+            where: {
+                [Op.or]: [
+                    { name },
+                    { code }
+                ]
+            }
+        });
+
+        if (existingSensor) {
+            return res.status(409).json({
+                message: 'Sensor with the same name or code already exists',
+                conflict: {
+                    field: existingSensor.name === name ? 'name' : 'code',
+                    value: existingSensor.name === name ? name : code
+                }
+            });
+        }
+
         const sensor = await Sensor.create({
             name,
             code,
+            serial,
             variableId,
-            equipmentId
         });
         res.status(201).json({
             message: 'Sensor created successfully',
@@ -132,18 +144,11 @@ export const create = async (req, res) => {
 export const update = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, code, variableId, equipmentId } = req.body;
+        const { name, code, variableId} = req.body;
 
         const sensor = await Sensor.findByPk(id);
         if (!sensor) {
             return res.status(404).json({ message: 'Sensor not found' });
-        }
-
-        if (equipmentId) {
-            const equipment = await Equipment.findOne({ where: { id: equipmentId } });
-            if (!equipment) {
-                return res.status(404).json({ message: 'Equipment not found' });
-            }
         }
 
         if (variableId) {
@@ -155,8 +160,8 @@ export const update = async (req, res) => {
 
         sensor.name = name || sensor.name;
         sensor.code = code || sensor.code;
+        sensor.serial = serial || sensor.serial;
         sensor.variableId = variableId || sensor.variableId;
-        sensor.equipmentId = equipmentId || sensor.equipmentId;
 
         await sensor.save();
 
