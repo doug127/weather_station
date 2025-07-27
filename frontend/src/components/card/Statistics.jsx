@@ -1,4 +1,27 @@
 import { useState, useEffect } from "react";
+
+// Función para mostrar tiempo relativo
+function getRelativeTime(dateString) {
+  if (!dateString) return '';
+  const now = new Date();
+  const date = new Date(dateString);
+  const diff = now - date;
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const weeks = Math.floor(days / 7);
+  const months = Math.floor(days / 30);
+  const years = Math.floor(days / 365);
+
+  if (seconds < 60) return `hace ${seconds} seg${seconds !== 1 ? 's' : ''}`;
+  if (minutes < 60) return `hace ${minutes} min${minutes !== 1 ? 's' : ''}`;
+  if (hours < 24) return `hace ${hours} hora${hours !== 1 ? 's' : ''}`;
+  if (days < 7) return `hace ${days} día${days !== 1 ? 's' : ''}`;
+  if (weeks < 5) return `hace ${weeks} semana${weeks !== 1 ? 's' : ''}`;
+  if (months < 12) return `hace ${months} mes${months !== 1 ? 'es' : ''}`;
+  return `hace ${years} año${years !== 1 ? 's' : ''}`;
+}
 import Chart from "react-apexcharts";
 import { api } from "../../api/apiRoutes";
 
@@ -25,17 +48,32 @@ export const Statistics = () => {
     },
   ]);
   
-  useEffect( () => {
+  const [dateRange, setDateRange] = useState('all');
+  useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await api.get('/value/filtered?sensor=Sensor Temperatura Máxima&startDate=2025-06-01&sort=DESC');         
+        const response = await api.get('/value/filtered?sensor=Sensor Temperatura Máxima&startDate=2025-06-01&sort=DESC');
         const sensorData = response.data.data[0];
+        let values = sensorData?.values || [];
 
-        const values = sensorData?.values || [];
+        // Filtrar por rango seleccionado
+        let filteredValues = [...values];
+        if (dateRange === '15d') {
+          filteredValues = values.slice(-15);
+        } else if (dateRange === '1m') {
+          filteredValues = values.slice(-30);
+        } else if (dateRange === '3m') {
+          filteredValues = values.slice(-90);
+        } else if (dateRange === '6m') {
+          filteredValues = values.slice(-180);
+        } // si es 'all', no filtra
 
-        const dates = values.map(v => v.date);
-        const seriesData = values.map(v => v.value);
-        
+        const dates = filteredValues.map(v => {
+          const [year, month, day] = v.date.split('-');
+          return `${day}/${month}/${year.slice(2)}`;
+        });
+        const seriesData = filteredValues.map(v => v.value);
+
         setUsersOptions({
           chart: {
             type: "area",
@@ -57,7 +95,7 @@ export const Statistics = () => {
           grid: { show: false },
           xaxis: {
             categories: dates,
-            labels: { show: true }, //* Acomodar fechas para que se muestre la inicial y la final 
+            labels: { show: false },
             axisBorder: { show: false },
             axisTicks: { show: false },
           },
@@ -80,17 +118,23 @@ export const Statistics = () => {
         });
 
         setData(response.data.data);
-        console.log(response.data);
       } catch (error) {
         console.error('Error al obtener datos:', error);
       }
     };
-
     fetchData();
-  },[])
+  }, [dateRange]);
 
   const [salesOptions, setSalesOptions] = useState({});
   const [salesSeries, setSalesSeries] = useState([]);
+  const [salesDateRange, setSalesDateRange] = useState('all');
+  const [salesAvailableRanges, setSalesAvailableRanges] = useState({
+    '15d': true,
+    '1m': true,
+    '3m': true,
+    '6m': true,
+    '1a': true,
+  });
   // --- Gráfica 2: Ventas ---
   useEffect(() => {
     const fetchData = async () => {
@@ -104,9 +148,32 @@ export const Statistics = () => {
         sensorsData.forEach(sensorGroup => {
           sensorGroup.values.forEach(v => allDates.add(v.date));
         });
-        const sortedDates = Array.from(allDates).sort();
+        let sortedDates = Array.from(allDates).sort();
 
-        // Armar series
+        // Calcular rangos disponibles
+        const availableRanges = {
+          '15d': sortedDates.length >= 15,
+          '1m': sortedDates.length >= 30,
+          '3m': sortedDates.length >= 90,
+          '6m': sortedDates.length >= 180,
+          '1a': sortedDates.length >= 365,
+        };
+        setSalesAvailableRanges(availableRanges);
+
+        // Filtrar fechas según el rango seleccionado
+        if (salesDateRange === '15d') {
+          sortedDates = sortedDates.slice(-15);
+        } else if (salesDateRange === '1m') {
+          sortedDates = sortedDates.slice(-30);
+        } else if (salesDateRange === '3m') {
+          sortedDates = sortedDates.slice(-90);
+        } else if (salesDateRange === '6m') {
+          sortedDates = sortedDates.slice(-180);
+        } else if (salesDateRange === '1a') {
+          sortedDates = sortedDates.slice(-365);
+        }
+
+        // Armar series filtradas
         const series = sensorsData.map((sensorGroup, idx) => {
           const colorPalette = ["#1A56DB", "#7E3BF2", "#10B981", "#F59E0B"];
           const color = colorPalette[idx % colorPalette.length];
@@ -116,7 +183,7 @@ export const Statistics = () => {
             dateToValue[v.date] = v.value;
           });
 
-          const data = sortedDates.map(date => dateToValue[date] ?? null); // null si no hay valor ese día
+          const data = sortedDates.map(date => dateToValue[date] ?? null);
 
           return {
             name: sensorGroup.sensor,
@@ -149,7 +216,7 @@ export const Statistics = () => {
           grid: { show: false },
           xaxis: {
             categories: sortedDates,
-            labels: { show: true },
+            labels: { show: false },
             axisBorder: { show: false },
             axisTicks: { show: false },
           },
@@ -161,9 +228,8 @@ export const Statistics = () => {
         console.error("Error al obtener datos para la gráfica:", error);
       }
     };
-
     fetchData();
-  }, []);
+  }, [salesDateRange]);
 
   // --- Gráfica 3: Leads ---
   const leadsOptions = {
@@ -351,13 +417,27 @@ export const Statistics = () => {
 
   return (
     <div>
-      <div className="grid gap-4 p-4 grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
-        {/* Tarjeta Users */}
-        
-        <div className="bg-white rounded-lg shadow-lg border border-gray-300  p-4 md:p-6">
-          <h5 className="leading-none text-3xl font-bold text-gray-900 pb-2">
+      {/* grafica 1 */}
+      <div className="w-full p-4"> 
+      <div className="bg-white rounded-lg shadow-lg border border-gray-300  p-4 md:p-6">
+       <div className="flex justify-between">
+          <h5 className="leading-none text-2xl font-bold text-gray-900 pb-2">
             {sensorInfo.sensor}
           </h5>
+          <select
+            name="dateRange"
+            value={dateRange}
+            onChange={e => setDateRange(e.target.value)}
+            className="border rounded px-3 py-2 text-xs cursor-pointer outline-none"
+          >
+            <option value="all">Filtrar por rango de tiempo</option>
+            <option value="15d">Últimos 15 días</option>
+            <option value="1m">Último mes</option>
+            <option value="3m">Últimos 3 meses</option>
+            <option value="6m">Últimos 6 meses</option>
+            <option value="1a">Último a;o</option>
+          </select>
+       </div>
           <p className="text-base font-normal text-gray-500">{sensorInfo.variable}</p>
           <div className="mt-4 object-contain">
             {usersSeries[0]?.data?.length > 0 && (
@@ -367,30 +447,57 @@ export const Statistics = () => {
                 type="area"
                 height={300}
               />
+              
             )}
+            
+          <div className="flex justify-end items-center m-auto text-xs text-gray-500 mb-2 w-full pr-3">
+           <div className="w-[95%] flex justify-between">
+             <span>
+              {usersOptions.xaxis?.categories && usersOptions.xaxis.categories.length > 0
+                ? usersOptions.xaxis.categories[0]
+                : ''}
+            </span>
+            <span>
+              {usersOptions.xaxis?.categories && usersOptions.xaxis.categories.length > 0
+                ? usersOptions.xaxis.categories[usersOptions.xaxis.categories.length - 1]
+                : ''}
+            </span>
+           </div>
+          </div>
+
           </div>
           <div className="p-2 border-t order-gray-200 text-gray-400">
             <p>
-              <i className="fa-solid fa-clock p-2"></i>last updated {sensorInfo.lastUpdated}
+              <i className="fa-solid fa-clock p-2"></i>
+              {getRelativeTime(sensorInfo.lastUpdated)}
             </p>
           </div>
+         
         </div>
+      </div>
 
+      <div className="w-full mt-6 p-4">
         {/* Tarjeta Sales */}
         <div className="bg-white rounded-lg shadow-lg border border-gray-300 p-4 md:p-6">
           <div className="flex justify-between">
-            <div>
-              <h5 className="leading-none text-3xl font-bold text-gray-900 pb-2">
-                $12,423
-              </h5>
-              <p className="text-base font-normal text-gray-500">
-                Sales this week
-              </p>
-            </div>
-            <div className="flex items-center px-2.5 py-0.5 text-base font-semibold text-green-500">
-              23%
-            </div>
+            <h5 className="leading-none text-2xl font-bold text-gray-900 pb-2">
+              Ventas
+            </h5>
+            <select
+              name="salesDateRange"
+              value={salesDateRange}
+              onChange={e => setSalesDateRange(e.target.value)}
+              className="border rounded px-3 text-xs cursor-pointer outline-none"
+            >
+              <option value="all">Filtrar por rango de tiempo</option>
+              <option value="15d" disabled={!salesAvailableRanges['15d']}>Últimos 15 días</option>
+              <option value="1m" disabled={!salesAvailableRanges['1m']}>Último mes</option>
+              <option value="3m" disabled={!salesAvailableRanges['3m']}>Últimos 3 meses</option>
+              <option value="6m" disabled={!salesAvailableRanges['6m']}>Últimos 6 meses</option>
+              <option value="1a" disabled={!salesAvailableRanges['1a']}>Último a;o</option>
+            </select>
           </div>
+          <p className="text-base font-normal text-gray-500">Sales this week</p>
           <div className="mt-4">
             <Chart
               options={salesOptions}
@@ -398,14 +505,32 @@ export const Statistics = () => {
               type="area"
               height={300}
             />
+            {/* Fechas inicio y fin para gráfica 2 (Sales) */}
+            <div className="flex justify-end items-center m-auto text-xs text-gray-500 mb-2 w-full pr-3">
+              <div className="w-[95%] flex justify-between">
+                <span>
+                  {salesOptions.xaxis?.categories && salesOptions.xaxis.categories.length > 0
+                    ? salesOptions.xaxis.categories[0]
+                    : ''}
+                </span>
+                <span>
+                  {salesOptions.xaxis?.categories && salesOptions.xaxis.categories.length > 1
+                    ? salesOptions.xaxis.categories[salesOptions.xaxis.categories.length - 1]
+                    : ''}
+                </span>
+              </div>
+            </div>
           </div>
           <div className="p-2 border-t order-gray-200 text-gray-400">
             <p>
-              <i className="fa-solid fa-clock p-2"></i> updated 4 min ago
+              <i className="fa-solid fa-clock p-2"></i>
+              {getRelativeTime(sensorInfo.lastUpdated)}
             </p>
           </div>
         </div>
-
+      </div>
+      <div className="grid gap-4 p-4 grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
+       
         {/* Tarjeta Leads */}
         <div className="bg-white rounded-lg shadow-lg border border-gray-300 p-4 md:p-6">
           <h5 className="leading-none text-2xl font-bold text-gray-900  pb-2">
