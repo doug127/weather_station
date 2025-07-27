@@ -9,8 +9,11 @@ export const trainModel = async (req, res) => {
             model_name: 'rain_predictor_from_node',
             json_data: filteredData
         }
+        // console.log(JSON.stringify(payload, null, 2));
 
-        const djangoRes = await axios.post('http://localhost:8000/api/train-model/', payload)
+        const djangoRes = await axios.post('http://localhost:8000/api/train-model/', payload, {
+            headers: {'Content-Type': 'application/json'}
+        });
 
         return res.json({
             message: 'Modelo entrenado y datos enviados a Django exitosamente',
@@ -24,3 +27,28 @@ export const trainModel = async (req, res) => {
         });
     }
 }
+
+export const predictWeather = async (req, res) => {
+    try {
+        const filteredData = await getFilteredValuesData(req.query);
+
+        const payload = {
+            json_data: filteredData
+        };
+
+        const djangoRes = await axios.post('http://localhost:8000/api/predict-model/', payload, {
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        return res.json({
+            message: 'Predicción generada',
+            django_response: djangoRes.data
+        });
+    } catch (error) {
+        console.error('Error enviando datos a Django:', error.message);
+        res.status(500).json({
+            message: 'Error al predecir desde Node',
+            error: error.message
+        });
+    }
+};

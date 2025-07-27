@@ -24,7 +24,5 @@ try {
     console.log(`🚀 Server is running at http://localhost:${PORT}`);
   });
 } catch (error) {
-  console.error('Server error Prueba:', error);
+  console.error('Server error:', error);
 }
-
-// prueba commit
