@@ -177,6 +177,7 @@ export const getFilteredValuesData = async (req, res) => {
 
     for (const v of values) {
       const sensor = v.Medition.Sensor?.name;
+      const code = v.Medition.Sensor?.code;
       const variable = v.Medition.Sensor?.Variable?.name;
       const unit = v.Medition.Sensor?.Variable?.unit;
       const key = `${sensor}|${variable}|${unit}`;
@@ -184,6 +185,7 @@ export const getFilteredValuesData = async (req, res) => {
       if (!grouped[key]) {
         grouped[key] = {
           sensor,
+          code,
           variable,
           unit,
           values: []

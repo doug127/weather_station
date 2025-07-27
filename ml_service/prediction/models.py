@@ -4,6 +4,7 @@ class TrainedModel(models.Model):
     model_name = models.CharField(max_length=100)
     json_data = models.JSONField()
 
+    path_to_file = models.CharField(max_length=255)
     tp = models.IntegerField()
     tn = models.IntegerField()
     fp = models.IntegerField()
@@ -19,7 +20,6 @@ class TrainedModel(models.Model):
     no_rain_f1_score = models.FloatField()
 
     mse = models.FloatField()
-    msa = models.FloatField()
 
     date_trained = models.DateTimeField(auto_now_add=True)
 
