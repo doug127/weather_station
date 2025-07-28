@@ -7,6 +7,7 @@ import { Context } from '../api/contextProvider'
 import { Footer } from '../components/Footer'
 import {motion} from 'framer-motion'
 import { AddStatistics } from '../components/form/addStatistics'
+import { AddValues } from '../components/form/addValues'
 
 
 export const Home = () => {
@@ -21,10 +22,10 @@ const {optionBanner, setOptionBanner} = useContext(Context);
                     </div>
                     <div>
                         <ul className='flex flex-col p-5 w-full justify-center space-y-2'>
-                            <li onClick={() => setOptionBanner('Statistics') } className={`${optionBanner === 'Statistics' ? 'bg-gray-800 text-white shadow-lg cursor-pointer' : 'hover:bg-gray-400 hover:text-white text-gray-400 '} transition duration-500 ease-in-out p-2 cursor-pointer rounded-md`}><i class="fa-solid fa-house px-5"></i>Estadisticas</li>
-                            <li onClick={() => setOptionBanner('Tables') }  className={`${optionBanner === 'Tables' ? 'bg-gray-800 text-white shadow-lg cursor-pointer' : 'hover:bg-gray-400 hover:text-white text-gray-400 '} transition duration-500 ease-in-out p-2 cursor-pointer rounded-md`}><i class="fa-solid fa-user px-5"></i>Tablas</li>
-                            <li onClick={() => setOptionBanner('AddStatistics') }  className={`${optionBanner === 'AddStatistics' ? 'bg-gray-800 text-white shadow-lg cursor-pointer' : 'hover:bg-gray-400 hover:text-white text-gray-400 '} transition duration-500 ease-in-out p-2 cursor-pointer rounded-md`}><i class="fa-solid fa-user px-5"></i>Tablas</li>
-                            <li className=' p-2 rounded-md text-gray-400 hover:bg-gray-400 hover:text-white cursor-pointer'><i class="fa-solid fa-circle-exclamation px-5"></i>Notificaition</li>
+                            <li onClick={() => setOptionBanner('Statistics') } className={`${optionBanner === 'Statistics' ? 'bg-gray-800 text-white shadow-lg cursor-pointer' : 'hover:bg-gray-400 hover:text-white text-gray-400 '} transition duration-500 ease-in-out p-2 cursor-pointer rounded-md`}><i class="fa-solid fa-chart-column px-5"></i>Estadisticas</li>
+                            <li onClick={() => setOptionBanner('Tables') }  className={`${optionBanner === 'Tables' ? 'bg-gray-800 text-white shadow-lg cursor-pointer' : 'hover:bg-gray-400 hover:text-white text-gray-400 '} transition duration-500 ease-in-out p-2 cursor-pointer rounded-md`}><i class="fa-solid fa-table px-5"></i>Tablas</li>
+                            <li onClick={() => setOptionBanner('AddStatistics') }  className={`${optionBanner === 'AddStatistics' ? 'bg-gray-800 text-white shadow-lg cursor-pointer' : 'hover:bg-gray-400 hover:text-white text-gray-400 '} transition duration-500 ease-in-out p-2 cursor-pointer rounded-md`}><i class="fa-solid fa-chart-line px-5"></i>Registrar sensor</li>
+                            <li onClick={() => setOptionBanner('AddValues') } className={`${optionBanner === 'AddValues' ? 'bg-gray-800 text-white shadow-lg cursor-pointer' : 'hover:bg-gray-400 hover:text-white text-gray-400 '} transition duration-500 ease-in-out p-2 cursor-pointer rounded-md`}><i class="fa-solid fa-chart-simple px-5"></i>Registrar valores</li>
                         </ul>
                     </div>
                 </div>
@@ -54,9 +55,25 @@ const {optionBanner, setOptionBanner} = useContext(Context);
             }
 
 
-            { optionBanner === 'AddStatistics' &&
+             {optionBanner === 'AddStatistics' && 
+            <motion.div
+                initial = {{x: -100, opacity: 0 }}
+                animate = {{x: 0, opacity:1}}
+                transition = {{duration: 0.6, ease: 'easeInOut'}} 
+            >
               <AddStatistics/>
-            }
+            </motion.div>
+              }
+
+             {optionBanner === 'AddValues' && 
+            <motion.div
+                initial = {{x: -100, opacity: 0 }}
+                animate = {{x: 0, opacity:1}}
+                transition = {{duration: 0.6, ease: 'easeInOut'}} 
+            >
+              <AddValues/>
+            </motion.div>
+              }
 
             <Footer/>
            </div>

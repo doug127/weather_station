@@ -122,10 +122,6 @@ export const create = async (req, res) => {
             });
         }
 
-        if (code.length !== 4) {
-            return res.status(400).json({message: "The code must be 4 characters long"})
-        }
-
         const sensor = await Sensor.create({
             name,
             code,
@@ -136,9 +132,10 @@ export const create = async (req, res) => {
             message: 'Sensor created successfully',
             data: sensor
         });
+
     } catch (error) {
         res.status(500).json({ 
-            message: 'Error creating sensor',
+            message: 'Error creating sensor1',
             error: error.message 
         });
     }

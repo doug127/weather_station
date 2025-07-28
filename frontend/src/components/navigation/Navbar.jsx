@@ -9,11 +9,8 @@ export const Navbar = () => {
 
                 <div className="p-2">
                     <p className="text-xs">
-                        <span className="text-gray-400">Clima</span> / {optionBanner === 'Statistics' ? 'Estadisticas' : optionBanner === 'Tables' && 'Tablas'}
+                        <span className="text-gray-400">Clima</span> / {optionBanner === 'Statistics' ? 'Estadisticas' : optionBanner === 'Tables' ? 'Tablas' : optionBanner === 'AddStatistics' ? 'Registrar Sensor' : optionBanner === 'AddValues' ? 'Registrar Valores' : ''}
                     </p> 
-                    <h1 className="font-bold">
-                        Inicio
-                    </h1>
                 </div>
 
                 <div className="h-full p-5">
