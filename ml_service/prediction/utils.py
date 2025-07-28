@@ -3,7 +3,7 @@ from collections import defaultdict
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.metrics import confusion_matrix, recall_score, f1_score, mean_squared_error
+from sklearn.metrics import roc_curve, confusion_matrix, recall_score, f1_score, mean_squared_error
 import os
 import joblib
 
@@ -30,7 +30,9 @@ def train_model_rf(df):
     df_model['rain'] = (df_model['prcp'] > 0).astype(int)
     df_model['rain_next_day'] = df_model['rain'].shift(-1)
 
-    # Quitamos la última fila que tendrá NaN en rain_next_day
+    df_model = df_model.dropna(axis=0, how='any')
+
+    # Quita la última fila que tendrá NaN en rain_next_day
     df_model = df_model.dropna(subset=['rain_next_day'])
 
     features = [col for col in df_model.columns if col not in ['rain_next_day']]
@@ -41,19 +43,31 @@ def train_model_rf(df):
 
     rf = RandomForestClassifier(random_state=42)
     param_grid = {
-        'n_estimators': [50, 100],
-        'max_depth': [None, 10, 20],
-        'min_samples_split': [2, 5],
-        'min_samples_leaf': [1, 2],
-        'max_features': ['sqrt']
+        'n_estimators': [50, 100, 200],
+        'max_depth': [None, 10, 20, 30],
+        'min_samples_split': [2, 5, 10],
+        'min_samples_leaf': [1, 2, 4],
+        'max_features': ['sqrt', 'log2']
     }
 
-    grid_search = GridSearchCV(estimator=rf, param_grid=param_grid,
-                               cv=5, scoring='accuracy', n_jobs=max(1, os.cpu_count() - 2))
+    grid_search = GridSearchCV(
+        estimator=rf, 
+        param_grid=param_grid,
+        cv=5, 
+        scoring='accuracy', 
+        n_jobs=max(1, os.cpu_count() - 2)        
+    )
     grid_search.fit(X_train, y_train)
 
     best_model = grid_search.best_estimator_
-    y_pred = best_model.predict(X_test)
+    y_prob = best_model.predict_proba(X_test)[:,1]
+
+    fpr, tpr, thresholds = roc_curve(y_test, y_prob)
+    j_scores = tpr - fpr
+    best_idx = j_scores.argmax()
+    best_threshold = thresholds[best_idx]
+    
+    y_pred = (y_prob >= best_threshold).astype(int)
 
     return best_model, y_test, y_pred, date
 

@@ -15,7 +15,7 @@ class TrainedModelViewSet(viewsets.ModelViewSet):
 
 class TrainedModelView(APIView):
     def post(self, request):
-        print('POST recibido con data:', request.data)
+        # print('POST recibido con data:', request.data)
 
         model_name = request.data.get('model_name')
         json_data = request.data.get('json_data')

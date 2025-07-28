@@ -233,86 +233,100 @@ export const createValue = async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
-    const { sensorId, date, frequency, values } = req.body;
-    const createdValues = [];
+    const { date, frequency, values } = req.body;
     const skippedValues = [];
-    let hasDuplicates = false;
 
-    if (!sensorId || !date || frequency === undefined || !Array.isArray(values)) {
+    if (!date || frequency === undefined || !Array.isArray(values) || values.length === 0) {
       await transaction.rollback();
       return res.status(400).json({ message: 'Missing required fields or invalid data format' });
     }
 
-    const dateNow = new Date();
-    const today = dateNow.toISOString().split('T')[0];
-
+    const today = new Date().toISOString().split('T')[0];
     const inputDate = new Date(date).toISOString().split('T')[0];
-    if (inputDate > today){
+
+    if (inputDate > today) {
       await transaction.rollback();
       return res.status(400).json({ message: 'Date cannot be in the future' });
-    } 
-
-    const sensor = await Sensor.findByPk(sensorId);
-    if (!sensor) {
-      await transaction.rollback();
-      return res.status(404).json({ message: 'Sensor not found' });
     }
 
-    if (values.length > frequency) {
-      await transaction.rollback();
-      return res.status(400).json({
-        message: `Number of values (${values.length}) exceeds frequency (${frequency})`
-      });
-    }
-
-    const [medition] = await Medition.findOrCreate({
-      where: { sensorId, date },
-      defaults: { frequency, sensorId, date }
-    });
+    const variableLimits = {
+      9: { name: 'Evaporación', min: 0, max: 500 },            // mm
+      8: { name: 'Presión atmosférica', min: 800, max: 1100 }, // hPa
+      7: { name: 'Radiación solar', min: 0, max: 1400 },       // W/m²
+      6: { name: 'Humedad relativa', min: 0, max: 100 },       // %
+      5: { name: 'Velocidad del viento', min: 0, max: 200 },   // km/h
+      4: { name: 'Dirección del viento', min: 0, max: 360 },   // °
+      3: { name: 'Insolación', min: 0, max: 24 },              // horas
+      2: { name: 'Precipitación', min: 0, max: 1000 },         // mm
+      1: { name: 'Temperatura', min: -100, max: 70 }           // °C
+    };
 
     for (const entry of values) {
-      const { momentId, value } = entry;
+      const { sensorId, momentId, value } = entry;
 
-      if (momentId === undefined || value === undefined) {
-        skippedValues.push({ ...entry, reason: 'Missing momentId or value' });
-        hasDuplicates = true;
+      if (!sensorId || !momentId || value === undefined) {
+        skippedValues.push({ ...entry, reason: 'Missing sensorId, momentId or value' });
         continue;
       }
 
-      const moment = await Moment.findByPk(momentId, { transaction });
+      const sensor = await Sensor.findByPk(sensorId);
+      if (!sensor) {
+        skippedValues.push({ ...entry, reason: 'Sensor not found' });
+        continue;
+      }
+
+      const moment = await Moment.findByPk(momentId);
       if (!moment) {
-        hasDuplicates = true;
         skippedValues.push({ ...entry, reason: 'Moment not found' });
         continue;
       }
 
-      // Verificar que no exista valor duplicado (fecha+sensor+momento)
+      const variableId = sensor.variableId;
+      const limits = variableLimits[variableId];
+
+      if (!limits) {
+        skippedValues.push({ ...entry, reason: 'No limits defined for this variable' });
+        continue;
+      }
+
+      if (value < limits.min || value > limits.max) {
+        skippedValues.push({
+          ...entry,
+          reason: `Value ${value} out of range for ${limits.name} (${limits.min}-${limits.max})`
+        });
+        continue;
+      }
+
+      // ✅ Verificar duplicados
       const existingValue = await Value.findOne({
-        include: [{
-          model: Medition,
-          where: { sensorId, date }
-        }],
+        include: [{ model: Medition, where: { sensorId, date } }],
         where: { momentId },
         transaction
       });
 
       if (existingValue) {
         skippedValues.push({ ...entry, reason: 'Duplicate value for this moment and date' });
-        hasDuplicates = true;
         continue;
       }
     }
 
-    if (hasDuplicates) {
+    if (skippedValues.length > 0) {
       await transaction.rollback();
       return res.status(400).json({
-        message: 'Duplicate values found',
+        message: 'Validation errors, no values inserted',
         skippedValues
       });
     }
 
+    const createdValues = [];
     for (const entry of values) {
-      const { momentId, value } = entry;
+      const { sensorId, momentId, value } = entry;
+
+      const [medition] = await Medition.findOrCreate({
+        where: { sensorId, date },
+        defaults: { frequency, sensorId, date },
+        transaction
+      });
 
       const newValue = await Value.create({
         value,
@@ -326,11 +340,9 @@ export const createValue = async (req, res) => {
     await transaction.commit();
 
     return res.status(201).json({
-      message: 'Values processed',
+      message: 'All values inserted successfully',
       inserted: createdValues.length,
-      skipped: skippedValues.length,
-      createdValues,
-      skippedValues
+      createdValues
     });
 
   } catch (error) {
@@ -342,3 +354,4 @@ export const createValue = async (req, res) => {
     });
   }
 };
+
