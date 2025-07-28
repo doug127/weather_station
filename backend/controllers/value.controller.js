@@ -233,86 +233,67 @@ export const createValue = async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
-    const { sensorId, date, frequency, values } = req.body;
+    const { date, frequency, values } = req.body;
     const createdValues = [];
     const skippedValues = [];
-    let hasDuplicates = false;
+    let hasErrors = false;
 
-    if (!sensorId || !date || frequency === undefined || !Array.isArray(values)) {
+    // Validación básica
+    if (!date || frequency === undefined || !Array.isArray(values) || values.length === 0) {
       await transaction.rollback();
       return res.status(400).json({ message: 'Missing required fields or invalid data format' });
     }
 
-    const dateNow = new Date();
-    const today = dateNow.toISOString().split('T')[0];
-
+    const today = new Date().toISOString().split('T')[0];
     const inputDate = new Date(date).toISOString().split('T')[0];
-    if (inputDate > today){
+
+    if (inputDate > today) {
       await transaction.rollback();
       return res.status(400).json({ message: 'Date cannot be in the future' });
-    } 
-
-    const sensor = await Sensor.findByPk(sensorId);
-    if (!sensor) {
-      await transaction.rollback();
-      return res.status(404).json({ message: 'Sensor not found' });
     }
 
-    if (values.length > frequency) {
-      await transaction.rollback();
-      return res.status(400).json({
-        message: `Number of values (${values.length}) exceeds frequency (${frequency})`
-      });
-    }
-
-    const [medition] = await Medition.findOrCreate({
-      where: { sensorId, date },
-      defaults: { frequency, sensorId, date }
-    });
-
+    // Validar cada valor
     for (const entry of values) {
-      const { momentId, value } = entry;
+      const { sensorId, momentId, value } = entry;
 
-      if (momentId === undefined || value === undefined) {
-        skippedValues.push({ ...entry, reason: 'Missing momentId or value' });
-        hasDuplicates = true;
+      if (!sensorId || !momentId || value === undefined) {
+        skippedValues.push({ ...entry, reason: 'Missing sensorId, momentId or value' });
+        hasErrors = true;
         continue;
       }
 
-      const moment = await Moment.findByPk(momentId, { transaction });
+      const sensor = await Sensor.findByPk(sensorId);
+      if (!sensor) {
+        skippedValues.push({ ...entry, reason: 'Sensor not found' });
+        hasErrors = true;
+        continue;
+      }
+
+      const moment = await Moment.findByPk(momentId);
       if (!moment) {
-        hasDuplicates = true;
         skippedValues.push({ ...entry, reason: 'Moment not found' });
+        hasErrors = true;
         continue;
       }
 
-      // Verificar que no exista valor duplicado (fecha+sensor+momento)
+      // Verificar duplicados
+      const medition = await Medition.findOrCreate({
+        where: { sensorId, date },
+        defaults: { frequency, sensorId, date },
+        transaction
+      }).then(([m]) => m);
+
       const existingValue = await Value.findOne({
-        include: [{
-          model: Medition,
-          where: { sensorId, date }
-        }],
+        include: [{ model: Medition, where: { sensorId, date } }],
         where: { momentId },
         transaction
       });
 
       if (existingValue) {
         skippedValues.push({ ...entry, reason: 'Duplicate value for this moment and date' });
-        hasDuplicates = true;
+        hasErrors = true;
         continue;
       }
-    }
-
-    if (hasDuplicates) {
-      await transaction.rollback();
-      return res.status(400).json({
-        message: 'Duplicate values found',
-        skippedValues
-      });
-    }
-
-    for (const entry of values) {
-      const { momentId, value } = entry;
 
       const newValue = await Value.create({
         value,
@@ -321,6 +302,14 @@ export const createValue = async (req, res) => {
       }, { transaction });
 
       createdValues.push(newValue);
+    }
+
+    if (createdValues.length === 0 && hasErrors) {
+      await transaction.rollback();
+      return res.status(400).json({
+        message: 'No values inserted due to errors',
+        skippedValues
+      });
     }
 
     await transaction.commit();
