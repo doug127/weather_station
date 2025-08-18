@@ -1,27 +1,23 @@
 import { Variable } from "./Variable.js";
 import { Sensor } from "./Sensor.js";
-import { Medition } from "./Medition.js";
-import { Value } from "./Value.js";
-import { Moment } from "./Moment.js";
+import { ValuesTimescaled } from "./valuestimescale.js";
+import { User } from "./User.js";
+import { Role } from "./Role.js";
 
 //? Variable 1-1 Sensor
 Sensor.belongsTo(Variable, { foreignKey: 'variableId' });
 
-// ? Sensor 1-M Medition
-Medition.belongsTo(Sensor, { foreignKey: 'sensorId' });
-Sensor.hasMany(Medition, { foreignKey: 'sensorId' });
+// ? Sensor 1-M ValuesTimescaled
+Sensor.hasMany(ValuesTimescaled, { foreignKey: 'sensor_id' });
+ValuesTimescaled.belongsTo(Sensor, { foreignKey: 'sensor_id' });
 
-// ? Medition 1-M Value
-Medition.hasMany(Value, { foreignKey: 'meditionId' });
-Value.belongsTo(Medition, { foreignKey: 'meditionId' });
-
-// ? Value 1-1 Moment
-Value.belongsTo(Moment, { foreignKey: 'momentId' });
+// ? User 1-M Role
+User.belongsTo(Role, { foreignKey: 'role_id' });
 
 export {
   Variable,
   Sensor,
-  Medition,
-  Value,
-  Moment
-}
+  ValuesTimescaled,
+  User,
+  Role  
+};

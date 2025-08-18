@@ -4,28 +4,23 @@
  */
 
 export const up = async (queryInterface, Sequelize) => {
-  await queryInterface.createTable('meditions', {
-    id: {
-      type: Sequelize.INTEGER,
-      primaryKey: true,
-      autoIncrement: true
-    },
-    date: {
-      type: Sequelize.DATEONLY,
+  await queryInterface.createTable('values_timescaled', {
+    timestamp: {
+      type: Sequelize.DATE,
       allowNull: false,
     },
-    frequency: {
-      type: Sequelize.INTEGER,
-      allowNull: false,
+    value: {
+      type: Sequelize.FLOAT,
+      allowNull: true,
     },
-    sensorId: {
+    sensor_id: {
       type: Sequelize.INTEGER,
       references: {
         model: 'sensors',
         key: 'id'
       },
       onUpdate: 'CASCADE',
-      onDelete: 'RESTRICT'
+      onDelete: 'CASCADE'
     },
     createdAt: {
       type: Sequelize.DATE,
@@ -38,8 +33,18 @@ export const up = async (queryInterface, Sequelize) => {
       defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
     }
   });
-};  
+
+  await queryInterface.addConstraint('values_timescaled', {
+    fields: ['timestamp', 'sensor_id'],
+    type: 'unique',
+    name: 'unique_timestamp_sensor'
+  });
+
+  await queryInterface.sequelize.query(`
+    SELECT create_hypertable('values_timescaled', 'timestamp', if_not_exists => TRUE);
+  `);
+};
 
 export const down = async (queryInterface, Sequelize) => {
-  await queryInterface.dropTable('meditions');
-} 
+    await queryInterface.dropTable('values_timescaled');
+};

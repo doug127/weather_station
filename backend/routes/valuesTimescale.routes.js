@@ -1,15 +1,15 @@
 import express from 'express';
 import {
     insertMeteostatData,
-    paginated,
+    // paginated,
     createValue,
     filteredValues
-} from '../controllers/value.controller.js';
+} from '../controllers/valuesTimescale.controller.js';
 
 const router = express.Router();
 
 router.post('/meteostat', insertMeteostatData);
-router.get('/paginated', paginated);
+// router.get('/paginated', paginated);
 router.get('/filtered', filteredValues);
 router.post('/create', createValue);
 

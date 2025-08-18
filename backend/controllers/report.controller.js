@@ -1,5 +1,5 @@
 import ExcelJS from 'exceljs'
-import { getFilteredValuesData } from './value.controller.js'
+import { getFilteredValuesData } from './valuesTimescale.controller.js'
 
 export const generateExcelReport = async (req, res) => {
     try {

@@ -1,18 +1,19 @@
-/**
+/** 
  * @param {import('sequelize').QueryInterface} queryInterface
  * @param {import('sequelize').Sequelize} Sequelize
  */
 
 export const up = async (queryInterface, Sequelize) => {
-  await queryInterface.createTable('moments', {
+  await queryInterface.createTable('roles', {
     id: {
       type: Sequelize.INTEGER,
       primaryKey: true,
       autoIncrement: true
     },
-    hour: {
+    name: {
       type: Sequelize.STRING,
-      allowNull: false
+      allowNull: false,
+      unique: true
     },
     createdAt: {
       type: Sequelize.DATE,
@@ -25,8 +26,8 @@ export const up = async (queryInterface, Sequelize) => {
       defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
     }
   });
-};
+}
 
 export const down = async (queryInterface, Sequelize) => {
-  await queryInterface.dropTable('moments');
-};
+  await queryInterface.dropTable('roles');
+}

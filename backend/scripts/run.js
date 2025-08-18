@@ -1,4 +1,4 @@
-import { insertMeteostatData } from '../controllers/value.controller.js';
+import { insertMeteostatData } from '../controllers/valuesTimescale.controller.js';
 import '../models/index.js'; // Para inicializar Sequelize y modelos
 
 (async () => {
@@ -10,9 +10,6 @@ import '../models/index.js'; // Para inicializar Sequelize y modelos
         station: '80428',
         start: '2021-01-01',
         end: '2025-06-30'
-      },
-      body: {
-        frequency: 1
       }
     };
 

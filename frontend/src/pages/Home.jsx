@@ -18,7 +18,7 @@ const {optionBanner, setOptionBanner} = useContext(Context);
             <div className="h-screen w-[360px] px-3 py-4 sticky top-0 z-10">
                 <div className="w-full h-full bg-white rounded-md shadow-lg border border-gray-300">
                     <div className='flex justify-center items-center p-5'>
-                        <p>Dashbroard Material Tailwind</p>
+                        <p>Estación Meteorológica</p>
                     </div>
                     <div>
                         <ul className='flex flex-col p-5 w-full justify-center space-y-2'>

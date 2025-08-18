@@ -4,33 +4,42 @@
  */
 
 export const up = async (queryInterface, Sequelize) => {
-  await queryInterface.createTable('values', {
+  await queryInterface.createTable('users', {
     id: {
       type: Sequelize.INTEGER,
       primaryKey: true,
       autoIncrement: true
     },
-    value: {
-      type: Sequelize.FLOAT,
-      allowNull: true,
+    email: {
+      type: Sequelize.STRING,
+      allowNull: false,
+      unique: true
     },
-    meditionId: {
-      type: Sequelize.INTEGER,
-      references: {
-        model: 'meditions',
-        key: 'id'
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'RESTRICT'
+    password: {
+      type: Sequelize.STRING,
+      allowNull: false
     },
-    momentId: {
+    username: {
+      type: Sequelize.STRING,
+      allowNull: false,
+      unique: true
+    },
+    role_id: {
       type: Sequelize.INTEGER,
+      allowNull: false,
       references: {
-        model: 'moments',
+        model: 'roles',
         key: 'id'
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'RESTRICT'
+      }
+    },
+    isVerified: {
+      type: Sequelize.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    },
+    code: {
+      type: Sequelize.INTEGER,
+      allowNull: true
     },
     createdAt: {
       type: Sequelize.DATE,
@@ -46,5 +55,5 @@ export const up = async (queryInterface, Sequelize) => {
 };
 
 export const down = async (queryInterface, Sequelize) => {
-  await queryInterface.dropTable('values');
+    await queryInterface.dropTable('users');
 };

@@ -52,7 +52,7 @@ export const Statistics = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await api.get('/value/filtered?sensor=Sensor Temperatura Máxima&startDate=2025-06-01&sort=DESC');
+        const response = await api.get('/value/filtered?sensor=Pluviómetro&startDate=2025-01-01&sort=DESC');
         const sensorData = response.data.data[0];
         let values = sensorData?.values || [];
 
@@ -295,22 +295,109 @@ export const Statistics = () => {
     yaxis: { show: false },
   };
 
-
-
   // --- Gráfica 4: Profit/Income/Expense ---
+  // const profitOptions = {
+  //   series: [
+  //     {
+  //       name: "Income",
+  //       color: "#31C48D",
+  //       data: [1420, 1620, 1820, 1420, 1650, 2120],
+  //     },
+  //     {
+  //       name: "Expense",
+  //       color: "#F05252",
+  //       data: [788, 810, 866, 788, 1100, 1200],
+  //     },
+  //   ],
+  //   chart: {
+  //     type: "bar",
+  //     height: 400,
+  //     toolbar: { show: false },
+  //   },
+  //   plotOptions: {
+  //     bar: {
+  //       horizontal: false,
+  //       columnWidth: "50%",
+  //       borderRadius: 6,
+  //     },
+  //   },
+  //   dataLabels: { enabled: false },
+  //   legend: { show: true, position: "bottom" },
+  //   xaxis: {
+  //     categories: ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+  //     labels: {
+  //       style: {
+  //         fontFamily: "Inter, sans-serif",
+  //         colors: "#6B7280",
+  //       },
+  //     },
+  //   },
+  //   yaxis: {
+  //     labels: {
+  //       style: {
+  //         fontFamily: "Inter, sans-serif",
+  //         colors: "#6B7280",
+  //       },
+  //     },
+  //   },
+  //   tooltip: {
+  //     shared: true,
+  //     intersect: false,
+  //     y: { formatter: (value) => `$${value}` },
+  //   },
+  //   grid: { strokeDashArray: 4 },
+  // };
+
+  const [categories, setCategories] = useState([]); // meses en el eje X
+  const [series, setSeries] = useState([
+    {
+      name: "Precipitación (mm)",
+      color: "#31C48D",
+      data: [],
+    },
+  ]);
+
+  useEffect(() => {
+    const fetchRainData = async () => {
+      try {
+        const response = await api.get(
+          "/value/filtered?sort=ASC&sensor=Pluviómetro&startDate=2025-01-02&endDate=2025-06-22"
+        );
+
+        const data = response.data.data;
+        if (!data || data.length === 0) return;
+
+        const rainSensor = data.find((item) => item.code === "prcp");
+        if (!rainSensor) return;
+
+        // Extraemos valores y convertimos fechas en nombres de meses
+        const monthlyData = rainSensor.values.reduce((acc, item) => {
+          const month = new Date(item.date).toLocaleString("en-US", { month: "short" });
+          acc[month] = (acc[month] || 0) + item.value;
+          return acc;
+        }, {});
+
+        const months = Object.keys(monthlyData);
+        const values = Object.values(monthlyData);
+
+        setCategories(months);
+        setSeries([
+          {
+            name: "Precipitación (mm)",
+            color: "#31C48D",
+            data: values,
+          },
+        ]);
+      } catch (error) {
+        console.error("Error fetching rain data:", error);
+      }
+    };
+
+    fetchRainData();
+  }, []);
+
   const profitOptions = {
-    series: [
-      {
-        name: "Income",
-        color: "#31C48D",
-        data: [1420, 1620, 1820, 1420, 1650, 2120],
-      },
-      {
-        name: "Expense",
-        color: "#F05252",
-        data: [788, 810, 866, 788, 1100, 1200],
-      },
-    ],
+    series,
     chart: {
       type: "bar",
       height: 400,
@@ -326,7 +413,7 @@ export const Statistics = () => {
     dataLabels: { enabled: false },
     legend: { show: true, position: "bottom" },
     xaxis: {
-      categories: ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+      categories, // ← Ahora dinámico con meses
       labels: {
         style: {
           fontFamily: "Inter, sans-serif",
@@ -340,12 +427,14 @@ export const Statistics = () => {
           fontFamily: "Inter, sans-serif",
           colors: "#6B7280",
         },
+        formatter: (val) => Math.round(val),
       },
+      title: { text: "mm de lluvia" },
     },
     tooltip: {
       shared: true,
       intersect: false,
-      y: { formatter: (value) => `$${value}` },
+      y: { formatter: (value) => `${value} mm` },
     },
     grid: { strokeDashArray: 4 },
   };
@@ -481,7 +570,7 @@ export const Statistics = () => {
         <div className="bg-white rounded-lg shadow-lg border border-gray-300 p-4 md:p-6">
           <div className="flex justify-between">
             <h5 className="leading-none text-2xl font-bold text-gray-900 pb-2">
-              Ventas
+              Rangos de Temperatura
             </h5>
             <select
               name="salesDateRange"
@@ -497,7 +586,7 @@ export const Statistics = () => {
               <option value="1a" disabled={!salesAvailableRanges['1a']}>Último a;o</option>
             </select>
           </div>
-          <p className="text-base font-normal text-gray-500">Sales this week</p>
+          <p className="text-base font-normal text-gray-500">Temperaturak</p>
           <div className="mt-4">
             <Chart
               options={salesOptions}
@@ -557,6 +646,19 @@ export const Statistics = () => {
       <div className="w-full mt-6 p-4">
         <div className="bg-white rounded-lg shadow-lg border border-gray-300 p-4 md:p-6">
           <h5 className="text-2xl font-bold text-gray-900 pb-2">Profit Report</h5>
+          <select
+            name="dateRange"
+            value={dateRange}
+            onChange={e => setDateRange(e.target.value)}
+            className="border rounded px-3 py-2 text-xs cursor-pointer outline-none"
+          >
+            <option value="all">Filtrar por rango de tiempo</option>
+            <option value="15d">Últimos 15 días</option>
+            <option value="1m">Último mes</option>
+            <option value="3m">Últimos 3 meses</option>
+            <option value="6m">Últimos 6 meses</option>
+            <option value="1a">Último a;o</option>
+          </select>
           <p className="text-base text-gray-500">
             Income vs Expense (last 6 months)
           </p>

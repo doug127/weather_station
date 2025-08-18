@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getFilteredValuesData } from "../controllers/value.controller.js";
+import { getFilteredValuesData } from "../controllers/valuesTimescale.controller.js";
 
 export const trainModel = async (req, res) => {
     try {
