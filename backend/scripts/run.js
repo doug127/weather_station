@@ -1,5 +1,5 @@
 import { insertMeteostatData } from '../controllers/valuesTimescale.controller.js';
-import '../models/index.js'; // Para inicializar Sequelize y modelos
+import '../models/index.js';
 
 (async () => {
   try {

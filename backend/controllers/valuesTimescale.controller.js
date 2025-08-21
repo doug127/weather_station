@@ -2,7 +2,6 @@ import {Sensor, ValuesTimescaled, Variable} from '../models/index.js';
 import { getWeatherData } from '../services/meteostat.js';
 import {sequelize} from '../server/db.js'; 
 import { Op} from 'sequelize';
-import { update } from './sensor.controller.js';
 
 export const insertMeteostatData = async (req, res) => {
     try {
@@ -62,56 +61,6 @@ export const insertMeteostatData = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 }
-
-// export const paginated = async (req, res) => {
-//     const limitPerSensor = parseInt(req.query.limit) || 5;
-
-//     try {
-//         const sensors = await Sensor.findAll();
-
-//         const results = [];
-
-//         for (const sensor of sensors) {
-//             const meditions = await Medition.findAll({
-//                 where: { sensorId: sensor.id },
-//                 include: [
-//                 {
-//                     model: Value,
-//                     include: [{ model: Moment, attributes: ['hour'] }]
-//                 }
-//                 ],
-//                 order: [['date', 'ASC']],
-//                 limit: limitPerSensor 
-//             });
-
-//             const sensorValues = [];
-//             for (const medition of meditions) {
-//                 for (const value of medition.Values) {
-//                 if (sensorValues.length >= limitPerSensor) break;
-//                 sensorValues.push({
-//                     value: value.value,
-//                     moment: value.Moment?.hour || 'N/A',
-//                 });
-//                 }
-//                 if (sensorValues.length >= limitPerSensor) break;
-//             }
-
-//             results.push({
-//                 sensor: sensor.name,
-//                 code: sensor.code,
-//                 values: sensorValues
-//             });
-//         }
-
-//         res.status(200).json({
-//         message: 'Values grouped by sensor retrieved successfully',
-//         data: results
-//         });
-//     } catch (error) {
-//         console.error('Error retrieving values:', error);
-//         res.status(500).json({ message: error.message });
-//     }
-// }
 
 export const getFilteredValuesData = async (req, res) => {
   try {

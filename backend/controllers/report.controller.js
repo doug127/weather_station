@@ -35,7 +35,7 @@ export const generateExcelReport = async (req, res) => {
         Object.keys(dateMap).forEach(date => {
             const row = { date };
             sensorCodes.forEach(code => {
-                row[code] = dateMap[date][code] || 0; // Si no hay valor, ponemos 0
+                row[code] = dateMap[date][code] || 0; 
             });
             worksheet.addRow(row);
         });
