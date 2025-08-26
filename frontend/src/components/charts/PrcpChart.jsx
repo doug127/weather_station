@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Chart from "react-apexcharts";
 import { api } from "../../api/apiRoutes";
 
-export const SensorChart = () => {
+export const PrcpChart = ({ dateLastYear, sensorPrcpChart }) => {
   const [options, setOptions] = useState({});
   const [series, setSeries] = useState([]);
   const [sensorInfo, setSensorInfo] = useState({ sensor: '', variable: '', unit: '', lastUpdated: '' });
@@ -11,7 +11,7 @@ export const SensorChart = () => {
   useEffect(() => {
     const fetchSensorData = async () => {
       try {
-        const response = await api.get('/value/filtered?sensor=Pluviómetro&startDate=2025-01-01&sort=DESC');
+        const response = await api.get(`/value/filtered?sensor=${sensorPrcpChart}&startDate=${dateLastYear}&sort=ASC`);
         const sensorData = response.data.data[0];
         if (!sensorData) return;
 
@@ -20,11 +20,18 @@ export const SensorChart = () => {
         else if (dateRange === '1m') values = values.slice(-30);
         else if (dateRange === '3m') values = values.slice(-90);
         else if (dateRange === '6m') values = values.slice(-180);
+        else if (dateRange === '1a') values = values.slice(-365);
 
+        // ✅ Convertir timestamp a formato dd/mm/yy
         const dates = values.map(v => {
-          const [year, month, day] = v.date.split('-');
-          return `${day}/${month}/${year.slice(2)}`;
+          if (!v.timestamp) return "";
+          const dateObj = new Date(v.timestamp);
+          const day = String(dateObj.getDate()).padStart(2, '0');
+          const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+          const year = dateObj.getFullYear().toString().slice(2);
+          return `${day}/${month}/${year}`;
         });
+
         const seriesData = values.map(v => v.value);
 
         setOptions({
@@ -32,11 +39,12 @@ export const SensorChart = () => {
           tooltip: { enabled: true, x: { show: false } },
           fill: { type: "gradient", gradient: { shade: "light", opacityFrom: 0.75, opacityTo: 0, gradientToColors: ["#164cb7ff"] } },
           dataLabels: { enabled: false },
-          stroke: { width: 4 },
+          stroke: { width: 3 },
           grid: { show: false },
           xaxis: { categories: dates, labels: { show: false }, axisBorder: { show: false }, axisTicks: { show: false } },
           yaxis: { show: true },
         });
+
         setSeries([{ name: sensorData.sensor, data: seriesData, color: "#1A56DB" }]);
         setSensorInfo({
           sensor: sensorData.sensor,

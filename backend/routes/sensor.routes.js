@@ -15,7 +15,7 @@ const adminRole = 1;
 router.get('/', getAll);
 router.get('/paginated', paginated);
 router.get('/:id', getById);
-router.post('/create', verifyToken, authorizeRoles([adminRole]), create);
+router.post('/create', create);
 router.patch('/update/:id', verifyToken, authorizeRoles([adminRole]), update);
 router.delete('/destroy/:id', verifyToken, authorizeRoles([adminRole]), destroy);
 

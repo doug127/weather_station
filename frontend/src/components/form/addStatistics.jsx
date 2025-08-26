@@ -129,13 +129,13 @@ const sendData = async (e) => {
                     </div>
                     <div className="w-full h-24 flex justify-center items-center mb-4">
                         <div className={`w-20 h-20 rounded-full border-4 ${stepOne ? 'border-green-400' : 'border-gray-400'} flex justify-center items-center`}>
-                            <p><i class="fa-solid fa-1 text-xl"></i></p>
+                            <p><i className="fa-solid fa-1 text-xl"></i></p>
                         </div>
                         <div className="w-20 h-1  bg-gray-400 relative overflow-hidden">
                             <div className={`w-full h-full bg-green-400 absolute ${step.includes(2) ? 'left-0' : '-left-20'} trnsition duration-500 ease-in-out`}></div>
                         </div>
                          <div className={`w-20 h-20 rounded-full border-4  ${step.includes(2) ? 'border-green-400' : 'border-gray-400'} flex justify-center items-center transition duration-700 ease-in-out`}>
-                            <p><i class="fa-solid fa-2 text-xl"></i></p>
+                            <p><i className="fa-solid fa-2 text-xl"></i></p>
                         </div>
                         
                     </div>
@@ -209,7 +209,7 @@ const sendData = async (e) => {
                          
                            <div className={`absolute transition-all duration-500 ease-in-out w-full h-full p-5 ${addForm === 'form' ? 'pointer-events-none -left-[100%] opacity-0' : 'opacity-100 left-0 top-0'}`}>
                                 <div className="flex flex-col space-y-4 w-full h-full">
-                                    <h1 className="py-2 text-gray-500"><i class="fa-solid fa-circle-exclamation text-yellow-500"></i> Verifique que todos los datos sean los correctos, se registrar con la fecha actual del equipo (verifique que la fecha de su equipo sea la correcta), una vez registre los datos no podra cambiar los datos.</h1>
+                                    <h1 className="py-2 text-gray-500"><i className="fa-solid fa-circle-exclamation text-yellow-500"></i> Verifique que todos los datos sean los correctos, se registrar con la fecha actual del equipo (verifique que la fecha de su equipo sea la correcta), una vez registre los datos no podra cambiar los datos.</h1>
                                     <p className="text-gray-400">Serial : <span className="text-gray-900 ">{valueSensor} </span></p>
                                     <p className="text-gray-400">Codigo : <span className="text-gray-900 ">{valueCodigo}</span></p>
                                     <p className="text-gray-400">Nombre del sensor : <span className="text-gray-900 ">{valueNombre}</span></p>

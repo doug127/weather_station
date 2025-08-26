@@ -24,6 +24,10 @@ export const up = async (queryInterface, Sequelize) => {
       type: Sequelize.STRING,
       allowNull: false,
     },
+    description: {
+      type: Sequelize.TEXT,
+      allowNull: true
+    },
     variableId: {
       type: Sequelize.INTEGER,
       references: {

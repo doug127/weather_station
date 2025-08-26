@@ -1,4 +1,5 @@
 import {Sensor, Variable} from '../models/index.js';
+import { generateDescription } from '../services/aiService.js';
 import { Op } from 'sequelize';
 
 export const getAll = async (req, res) => {
@@ -52,6 +53,7 @@ export const paginated = async (req, res) => {
                 id: sensor.id,
                 serial: sensor.serial,
                 name: sensor.name,
+                description: sensor.description,
                 variable: {
                     name: sensor.Variable.name,
                     unit: sensor.Variable.unit
@@ -82,6 +84,7 @@ export const getById = async (req, res) => {
                 id: sensor.id,
                 serial: sensor.serial,
                 name: sensor.name,
+                description: sensor.description,
                 variable: {
                     name: sensor.Variable.name,
                     unit: sensor.Variable.unit
@@ -122,11 +125,17 @@ export const create = async (req, res) => {
             });
         }
 
+        const variable_ai = await Variable.findByPk(variableId);
+        const variable_name = variable_ai.name;
+        const variable_unit = variable_ai.unit;
+        const description = await generateDescription(name, variable_name, variable_unit);
+
         const sensor = await Sensor.create({
             name,
             code,
             serial,
             variableId,
+            description
         });
         res.status(201).json({
             message: 'Sensor created successfully',
@@ -144,7 +153,7 @@ export const create = async (req, res) => {
 export const update = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, code, variableId} = req.body;
+        const { name, code, description, variableId} = req.body;
 
         const sensor = await Sensor.findByPk(id);
         if (!sensor) {
@@ -161,6 +170,7 @@ export const update = async (req, res) => {
         sensor.name = name || sensor.name;
         sensor.code = code || sensor.code;
         sensor.serial = serial || sensor.serial;
+        sensor.description = description || sensor.description;
         sensor.variableId = variableId || sensor.variableId;
 
         await sensor.save();

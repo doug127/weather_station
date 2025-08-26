@@ -9,7 +9,6 @@ import {
 const router = express.Router();
 
 router.post('/meteostat', insertMeteostatData);
-// router.get('/paginated', paginated);
 router.get('/filtered', filteredValues);
 router.post('/create', createValue);
 

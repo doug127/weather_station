@@ -75,13 +75,12 @@ export const getFilteredValuesData = async (req, res) => {
       if (maxValue !== undefined) whereClause.value[Op.lte] = parseFloat(maxValue);
     }
 
-    const meditionWhere = {};
     if (startDate && endDate) {
-      meditionWhere.date = { [Op.between]: [startDate, endDate] };
+      whereClause.timestamp = { [Op.between]: [startDate, endDate] };
     } else if (startDate) {
-      meditionWhere.date = { [Op.gte]: startDate };
+      whereClause.timestamp = { [Op.gte]: startDate };
     } else if (endDate) {
-      meditionWhere.date = { [Op.lte]: endDate };
+      whereClause.timestamp = { [Op.lte]: endDate };
     }
 
     let sensorWhere;

@@ -24,6 +24,10 @@ export const Sensor = sequelize.define("Sensor", {
         allowNull: false,
         required: true,
     },
+    description: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
     variableId: {
         type: DataTypes.INTEGER,
         allowNull: false,

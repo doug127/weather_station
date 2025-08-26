@@ -7,21 +7,14 @@ export const AddValues = () => {
     const [sensors, setSensors] = useState([]);
     const [formValues, setFormValues] = useState({});
     const [focused, setFocused] = useState({});
-    const [moment, setMoment] = useState([]);
-    const [selectedHour, setSelectedHour] = useState("");  // NUEVO: Estado para hora
-    const [selectedDate, setSelectedDate] = useState("");  // NUEVO: Estado para fecha
+    const [selectedTime, setSelectedTime] = useState("");
+    const [selectedDate, setSelectedDate] = useState(""); 
 
     useEffect(() => {
         const valuesData = async () => {
             try {
                 const response = await api.get('/sensor/');
                 console.log("Respuesta del backend:", response.data);
-
-                const horsMoments = await api.get('/moment/');
-                console.log("Respuesta del backend moment:", horsMoments.data);
-
-                const dataArrayMoment = horsMoments.data.get || [];
-                setMoment(dataArrayMoment);
 
                 const dataArray = Array.isArray(response.data)
                     ? response.data
@@ -38,7 +31,7 @@ export const AddValues = () => {
 
     const sendValues = async () => {
     
-        if (!selectedDate || !selectedHour) {
+        if (!selectedDate || !selectedTime) {
             Swal.fire({
                 icon: 'warning',
                 title: 'Campos incompletos',
@@ -47,16 +40,16 @@ export const AddValues = () => {
             return;
         }
 
-        const emptyInputs = sensors.some(sensor => !formValues[sensor.id] || formValues[sensor.id].trim() === '');
+        // const emptyInputs = sensors.some(sensor => !formValues[sensor.id] || formValues[sensor.id].trim() === '');
 
-        if (emptyInputs) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Valores incompletos',
-                text: 'Por favor completa todos los valores de los sensores.',
-            });
-            return;
-        }
+        // if (emptyInputs) {
+        //     Swal.fire({
+        //         icon: 'warning',
+        //         title: 'Valores incompletos',
+        //         text: 'Por favor completa todos los valores de los sensores.',
+        //     });
+        //     return;
+        // }
 
         const confirmResult = await Swal.fire({
             title: '¿Registrar valores?',
@@ -69,13 +62,12 @@ export const AddValues = () => {
 
         if (!confirmResult.isConfirmed) return;
 
+        const timestamp = new Date(`${selectedDate}T${selectedTime}:00Z`).toISOString();
         try {
             const payload = {
-                date: selectedDate,
-                frequency: Object.keys(formValues).length,
+                timestamp,
                 values: Object.keys(formValues).map(sensorId => ({
-                    sensorId: parseInt(sensorId),
-                    momentId: parseInt(selectedHour),
+                    sensor_id: parseInt(sensorId),
                     value: parseFloat(formValues[sensorId])
                 }))
             };
@@ -94,7 +86,7 @@ export const AddValues = () => {
 
             setFormValues({});
             setSelectedDate("");
-            setSelectedHour("");
+            setSelectedTime("");
 
         } catch (error) {
             console.error("Error al enviar datos:", error);
@@ -124,13 +116,14 @@ export const AddValues = () => {
                             <div className="w-full">
                                 <label htmlFor="hora">Hora</label>
                                 <select
-                                    className="w-full border p-2 rounded-md outline-none"
-                                    value={selectedHour}
-                                    onChange={(e) => setSelectedHour(e.target.value)}
-                                >
-                                    <option value="">Seleccionar hora</option>
-                                    {moment.map(m => (
-                                        <option key={m.id} value={m.id}>{m.hour}</option>
+                                    className="w-full border p-2 rounded-md cursor-pointer outline-none"
+                                    value={selectedTime}
+                                    onChange={(e) => setSelectedTime(e.target.value)}
+                                    >
+                                    {Array.from({ length: 24 }, (_, i) => (
+                                        <option key={i} value={`${String(i).padStart(2, "0")}:00`}>
+                                        {String(i).padStart(2, "0")}:00
+                                        </option>
                                     ))}
                                 </select>
                             </div>

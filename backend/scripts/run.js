@@ -1,3 +1,4 @@
+import { now } from 'sequelize/lib/utils';
 import { insertMeteostatData } from '../controllers/valuesTimescale.controller.js';
 import '../models/index.js';
 
@@ -9,7 +10,7 @@ import '../models/index.js';
       query: {
         station: '80428',
         start: '2021-01-01',
-        end: '2025-06-30'
+        end: new Date().toISOString().slice(0, 10) 
       }
     };
 
