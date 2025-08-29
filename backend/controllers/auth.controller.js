@@ -111,13 +111,13 @@ export const verifyEmail = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
-    if (!email) {
+    if (!username) {
       return res.status(400).json({ message: 'Email is required.' });
     }
 
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({ where: { username } });
 
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
@@ -133,15 +133,39 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid password.' });
     }
 
-    const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ 
+      id: user.id,
+      username: user.username,
+      role_id: user.role_id
+    }, 
+    JWT_SECRET, 
+    { expiresIn: '1h' });
 
-    res.status(200).json({ 
-      message: 'Login successful', 
-      token
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000 // 15 minutes
     });
+
+    res.status(200).json({ message: 'Login successful' });
   } catch (error) {
     console.error('Error logging in:', error);
     res.status(500).json({ message: 'Error logging in', error: error.message });
+  }
+}
+
+export const logout = (req, res) => {
+  try {
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    });
+    res.status(200).json({ message: 'Logout successful' });
+  } catch (error) {
+    console.error('Error logging out:', error);
+    res.status(500).json({ message: 'Error logging out', error: error.message });
   }
 }
 
@@ -215,5 +239,14 @@ export const resetPassword = async (req, res) => {
   } catch (error) {
     console.error('Error resetting password:', error);
     res.status(500).json({ message: 'Error resetting password', error: error.message });
+  }
+}
+
+export const getCurrentUser = (req, res) => {
+  try {
+    res.status(200).json({ user: req.user });
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    res.status(500).json({ message: 'Error getting current user', error: error.message });
   }
 }

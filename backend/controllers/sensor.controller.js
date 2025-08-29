@@ -16,6 +16,7 @@ export const getAll = async (req, res) => {
           id: sensor.id,
           serial: sensor.serial,
           name: sensor.name,
+          description: sensor.description,
           variable: {
             name: sensor.Variable.name,
             unit: sensor.Variable.unit
