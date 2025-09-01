@@ -55,6 +55,8 @@ export const register = async (req, res) => {
     const role_id = 2;
 
     const verificationCode = crypto.randomInt(100000, 999999);
+    const minutes = 15  * 1000 * 60;
+    const expirationTime = new Date(Date.now() + minutes);
 
     const user = await User.create({ 
       email, 
@@ -62,7 +64,8 @@ export const register = async (req, res) => {
       username, 
       role_id,
       isVerified: false,
-      code: verificationCode
+      code: verificationCode,
+      codeExpiresAt: expirationTime
     });
 
     await sendVerificationEmail(email, verificationCode);
@@ -98,8 +101,13 @@ export const verifyEmail = async (req, res) => {
       return res.status(400).json({ message: 'Invalid verification code.' });
     }
 
+    if (user.codeExpiresAt < new Date()) {
+      return res.status(400).json({ message: 'Verification code has expired. Please request a new one.' });
+    }
+
     user.isVerified = true;
     user.code = null;
+    user.codeExpiresAt = null;
     await user.save();
 
     res.status(200).json({ message: 'Email verified successfully.' });
@@ -108,6 +116,28 @@ export const verifyEmail = async (req, res) => {
     res.status(500).json({ message: 'Error verifying email', error: error.message });
   }
 };
+
+export const resendCode = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ where: { email } });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const verificationCode = crypto.randomInt(100000, 999999);
+    const expirationTime = new Date(Date.now() + 15 * 60 * 1000);
+
+    user.code = verificationCode;
+    user.codeExpiresAt = expirationTime;
+    await user.save();
+
+    await sendVerificationEmail(email, verificationCode);
+
+    res.status(200).json({ message: "New code sent to email" });
+  } catch (error) {
+    res.status(500).json({ message: "Error resending code", error: error.message });
+  }
+}
 
 export const login = async (req, res) => {
   try {

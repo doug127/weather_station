@@ -59,30 +59,70 @@ export const AuthProvider = ({ children }) => {
         }
     }
 
-    // const register = async ( username, email, password, confirmPassword ) => {
-    //     try {
-    //         setLoading(true);
-    //         setError(null);
+    const register = async (username, email, password, passwordConfirm) => {
+        try {
+            setLoading(true);
+            setError(null);
 
-    //         if (password !== confirmPassword) {
-    //             setError("Las contraseñas no coinciden");
-    //             return;
-    //         }
+            const res = await api.post("/auth/register",
+                { username, email, password, passwordConfirm }
+            )
 
-    //         await api.post("/auth/register", { username, email, password }, { withCredentials: true });
+            console.log("Registro exitoso: ", res);
 
-    //         const res = await api.get("/auth/me", { withCredentials: true });
-    //         setUser(res.data.user);
-    //         navigate("/verify-password");
-    //     } catch (err) {
-    //         setError(err.response?.data?.message || "Error al registrar");
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // }
+            localStorage.setItem("pendingEmail", email);
+
+            navigate("/verify-email");
+        } catch (err) {
+            console.error("Error registrando usuario:", err);
+            alert(err.response?.data?.message || "Error en el registro");
+        }
+    }
+
+    const verifyEmail = async (email, code) => {
+        try {
+            setLoading(true);
+            setError(null);
+            const intCode = parseInt(code, 10);
+
+            const res = await api.post("/auth/verify-email", 
+                { 
+                    email, 
+                    code: intCode }
+            );
+            console.log("Verificación de email exitosa: ", res.data);
+            localStorage.removeItem("pendingEmail");
+            navigate("/auth");
+        } catch (err) {
+            console.error("Error verificando email:",   err);
+            alert(err.response?.data?.message || "Error en la verificación");
+        }
+    }
+
+    const resendCode = async (email) => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const res = await api.post("auth/resend-code", { email });
+            console.log(res.data.message);
+        } catch (error) {
+            console.error("Error resending code:", error.response?.data || error.message);
+            throw error;
+        }
+    }
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, loading, error }}>
+        <AuthContext.Provider value={{ 
+            user, 
+            login, 
+            logout, 
+            loading, 
+            error, 
+            register, 
+            verifyEmail, 
+            resendCode
+        }}>
             {children}
         </AuthContext.Provider>
     );

@@ -1,10 +1,9 @@
 import { useContext, useState } from "react";
 import { motion } from "framer-motion";
 import { Input } from "@/shared/components/inputs/Input";
-import { api } from "@/shared/api/apiRoutes";
 import { ToggleButton } from "../components/buttons/Button";
 import { Img } from "../layouts/Img";
-import { AuthContext } from "../../../shared/hooks/AuthContext";
+import { AuthContext } from "@/shared/hooks/AuthContext";
 // import { useAuth } from "../hooks/useAuth";
 
 export const Auth = () => {
@@ -15,17 +14,22 @@ export const Auth = () => {
   const [email, setEmail] = useState("");
   const [focusPassword, setFocusPassword] = useState(false);
   const [password, setPassword] = useState("");
-  const [focusName, setFocusName] = useState(false);
-  const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
   const [focusUsername, setFocusUsername] = useState(false);
+  const [username, setUsername] = useState("");
+  const [focusConfirmPassword, setFocusConfirmPassword] = useState(false);
+  const [passwordConfirm, setConfirmPassword] = useState("");
 
-  const { login, loading, error } = useContext(AuthContext);
+  const { login, loading, error, register } = useContext(AuthContext);
 
   const onSubmitLogin = (e) => {
     e.preventDefault();
     login(username, password);
   };
+
+  const onSubmitRegister = (e) => {
+    e.preventDefault();
+    register(username, email, password, passwordConfirm);
+  }
 
   return (
     <div className="flex h-screen w-screen">
@@ -51,6 +55,7 @@ export const Auth = () => {
                 input={focusUsername}
                 setInput={setFocusUsername}
                 type="text"
+                validationType="username"
               />
 
               {/* Password */}
@@ -80,14 +85,15 @@ export const Auth = () => {
               transition={{ duration: 0.6, ease: "easeInOut" }}
               className="w-full max-w-sm space-y-4"
             >
-              {/* Name */}
+              {/* Username */}
               <Input
-                label="Name"
-                value={name}
-                setValue={setName}
-                input={focusName}
-                setInput={setFocusName}
+                label="Username"
+                value={username}
+                setValue={setUsername}
+                input={focusUsername}
+                setInput={setFocusUsername}
                 type="text"
+                validationType="username"
               />
 
               {/* Email */}
@@ -98,6 +104,7 @@ export const Auth = () => {
                 input={focusEmail}
                 setInput={setFocusEmail}
                 type="email"
+                validationType="email"
               />
 
               {/* Password */}
@@ -108,8 +115,24 @@ export const Auth = () => {
                 input={focusPassword}
                 setInput={setFocusPassword}
                 type="password"
+                validationType="password"
               />
-              <button className="w-full bg-gray-900 text-white py-2 rounded-md hover:bg-gray-700">
+
+              <Input
+                label="Confirm Password"
+                value={passwordConfirm}
+                setValue={setConfirmPassword}
+                input={focusConfirmPassword}
+                setInput={setFocusConfirmPassword}
+                type="password"
+                validationType="passwordConfirm"
+                compareWith={password}
+              />
+              <button 
+                className="w-full bg-gray-900 text-white py-2 rounded-md hover:bg-gray-700"
+                type="submit"
+                onClick={onSubmitRegister}
+              >
                 Register
               </button>
             </motion.div>
