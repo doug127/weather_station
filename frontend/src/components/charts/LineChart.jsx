@@ -9,7 +9,7 @@ export const LineChart = ({ title }) => {
   useEffect(() => {
     const fetchLineData = async () => {
       try {
-        const response = await api.get('/value/line'); // Ajusta tu endpoint real
+        const response = await api.get('/value/line');
         const data = response.data;
         setSeries([{ name: "Visitors", data: data.values }]);
         setOptions({

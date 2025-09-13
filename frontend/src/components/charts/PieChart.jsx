@@ -9,7 +9,7 @@ export const PieChart = ({ title }) => {
   useEffect(() => {
     const fetchPieData = async () => {
       try {
-        const response = await api.get('/value/pie'); // Ajusta tu endpoint real
+        const response = await api.get('/value/pie'); 
         const data = response.data;
         setSeries(data.values);
         setOptions({
