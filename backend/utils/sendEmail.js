@@ -14,15 +14,15 @@ export const sendVerificationEmail = (email, code) => {
   const mailOptions = {
     from: process.env.USER_EMAIL,
     to: email,
-    subject: 'Email Verification',
-    text: `Your verification code is: ${code}`
+    subject: 'Verificar Correo Electrónico',
+    text: `Tu código de verificación es: ${code}`
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
-      console.error('Error sending email:', error);
+      console.error('Error enviando correo:', error);
     } else {
-      console.log('Email sent:', info.response);
+      console.log('Correo enviado:', info.response);
     }
   });
 };

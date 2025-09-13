@@ -16,10 +16,17 @@ export const AuthProvider = ({ children }) => {
         const fetchUser = async () => {
 
             try {
-                const res = await api.get('/auth/me', { withCredentials: true });
-                setUser(res.data.user);
+                const storedUser = localStorage.getItem("user");
+                if (storedUser) {
+                    setUser(JSON.parse(storedUser));
+                } else {
+                    const res = await api.get("/auth/me", { withCredentials: true });
+                    setUser(res.data.user);
+                    localStorage.setItem("user", JSON.stringify(res.data.user));
+                }
             } catch (error) {
                 setUser(null);
+                localStorage.removeItem("user");
                 console.error('Error fetching user:', error);
             } finally {
                 setLoading(false);
@@ -28,15 +35,16 @@ export const AuthProvider = ({ children }) => {
         fetchUser();
     }, []);
 
-    const login = async (username, password) => {
+    const login = async (identifier, password) => {
         try {
             setLoading(true);
             setError(null);
 
-            await api.post("/auth/login", { username, password }, { withCredentials: true });
+            await api.post("/auth/login", { identifier, password }, { withCredentials: true });
 
             const res = await api.get("/auth/me", { withCredentials: true });
             setUser(res.data.user);
+            localStorage.setItem("user", JSON.stringify(res.data.user));
             navigate("/Home");            
         } catch (err) {
             setError(err.response?.data?.message || "Error al iniciar sesión");
@@ -50,7 +58,8 @@ export const AuthProvider = ({ children }) => {
             await api.post("/auth/logout", {}, { withCredentials: true});
             setUser(null);
             setOptionBanner('Init');
-            localStorage.clear();
+            localStorage.removeItem("user");
+            localStorage.removeItem("optionBanner");
         } catch (error) {
             setUser(null);
             console.error('Error logging out:', error);
@@ -104,13 +113,68 @@ export const AuthProvider = ({ children }) => {
             setLoading(true);
             setError(null);
 
-            const res = await api.post("auth/resend-code", { email });
+            const res = await api.post("/auth/resend-code", { email });
             console.log(res.data.message);
         } catch (error) {
             console.error("Error resending code:", error.response?.data || error.message);
             throw error;
         }
     }
+
+    const passwordRecovery = async (email) => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const res = await api.post("/auth/password-recovery", { email });
+            return res.data.message;
+        } catch (err) {
+            setError(err.response?.data?.message || "Error al solicitar recuperación de contraseña");
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const resetPassword = async (email, code, password, passwordConfirm) => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const res = await api.post("/auth/reset-password", {
+            email,
+            code,
+            password,
+            passwordConfirm,
+            });
+            localStorage.removeItem("recoveryEmail");
+            navigate("/auth");
+        } catch (err) {
+            setError(err.response?.data?.message || "Error al restablecer contraseña");
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const updateUsername = async (newUsername) => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const res = await api.patch("/auth/update-username", { username: newUsername }, { withCredentials: true });
+
+            setUser({ ...user, username: newUsername });
+            localStorage.setItem("user", JSON.stringify({ ...user, username: newUsername }));
+
+            return res.data.message;
+        } catch (err) {
+            setError(err.response?.data?.message || "Error al actualizar nombre de usuario");
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <AuthContext.Provider value={{ 
@@ -121,7 +185,10 @@ export const AuthProvider = ({ children }) => {
             error, 
             register, 
             verifyEmail, 
-            resendCode
+            resendCode,
+            passwordRecovery,
+            resetPassword,
+            updateUsername
         }}>
             {children}
         </AuthContext.Provider>

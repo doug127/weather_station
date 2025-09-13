@@ -11,13 +11,13 @@ export const register = async (req, res) => {
     const { email, password, passwordConfirm, username } = req.body;
 
     if (!email) {
-        return res.status(400).json({ message: 'Email is required.' });
+        return res.status(400).json({ message: 'El correo electrónico es requerido' });
     }
 
     const hasEmail = /\S+@\S+\.\S+/;
 
     if (!hasEmail.test(email)) {
-      return res.status(400).json({ message: 'Invalid email format.' });
+      return res.status(400).json({ message: 'El formato de correo electróico es incorrecto' });
     }
 
     const hasMayus = /[A-Z]/.test(password);
@@ -25,19 +25,19 @@ export const register = async (req, res) => {
     const hasNumber = /\d/.test(password);
 
     if (!hasMayus || !hasSpecialChar || !hasNumber) {
-      return res.status(400).json({ message: 'Password must contain at least one uppercase letter, one special character, and one number.' });
+      return res.status(400).json({ message: 'La contraseña debe contener al menos una letra mayúscula, un caractér especial y un número.' });
     }
 
     if (!passwordConfirm) {
-      return res.status(400).json({ message: 'Password confirmation is required.' });
+      return res.status(400).json({ message: 'Confirmar contraseña es requerido.' });
     }
 
     if (password !== passwordConfirm) {
-      return res.status(400).json({ message: 'Passwords do not match.' });
+      return res.status(400).json({ message: 'Las contraseñas no coinciden' });
     } 
 
     if (!password) {
-        return res.status(400).json({ message: 'Password is required.' });
+        return res.status(400).json({ message: 'La contraseña es requerida.' });
     }
     
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -45,11 +45,11 @@ export const register = async (req, res) => {
     const existingUsername = await User.findAll({ where: { username } });
 
     if (!username) {
-        return res.status(400).json({ message: 'Username is required.' });
+        return res.status(400).json({ message: 'El nombre de usuario es requerido.' });
     }
 
     if (existingUsername.length > 0) {
-        return res.status(400).json({ message: 'Username already exists.' });
+        return res.status(400).json({ message: 'El nombre de usuario ya existe.' });
     }
 
     const role_id = 2;
@@ -70,10 +70,10 @@ export const register = async (req, res) => {
 
     await sendVerificationEmail(email, verificationCode);
 
-    res.status(201).json({ message: 'User registered successfully' });
+    res.status(201).json({ message: 'Usuario registrado correctamente.' });
   } catch (error) {
-    console.error('Error registering user:', error);
-    res.status(500).json({ message: 'Error registering user', error: error.message });
+    console.error('Error registrando el usuario:', error);
+    res.status(500).json({ message: 'Error registrando el usuario.', error: error.message });
   }
 }
 
@@ -81,28 +81,26 @@ export const verifyEmail = async (req, res) => {
   try {
     const { email, code } = req.body;
 
-    console.log('Verifying email:', email, 'with code:', code);
-
     if (!email) {
-      return res.status(400).json({ message: 'Email is are required.' });
+      return res.status(400).json({ message: 'El correo electrónico es requerido.' });
     }
 
     if (!code) {
-      return res.status(400).json({ message: 'Verification code is required.' });
+      return res.status(400).json({ message: 'El código de verificación es requerido.' });
     }
 
     const user = await User.findOne({ where: { email } });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
+      return res.status(404).json({ message: 'El usuario no ha sido encontrado.' });
     }
 
     if (user.code !== code) {
-      return res.status(400).json({ message: 'Invalid verification code.' });
+      return res.status(400).json({ message: 'Código de verificación inválido.' });
     }
 
     if (user.codeExpiresAt < new Date()) {
-      return res.status(400).json({ message: 'Verification code has expired. Please request a new one.' });
+      return res.status(400).json({ message: 'El código de verificación ha expirado, por favor vuelva a reenviar el código.' });
     }
 
     user.isVerified = true;
@@ -110,10 +108,10 @@ export const verifyEmail = async (req, res) => {
     user.codeExpiresAt = null;
     await user.save();
 
-    res.status(200).json({ message: 'Email verified successfully.' });
+    res.status(200).json({ message: 'El correo electrónico ha sido registrado correctamente.' });
   } catch (error) {
-    console.error('Error verifying email:', error);
-    res.status(500).json({ message: 'Error verifying email', error: error.message });
+    console.error('Error verificando el correo electrónico:', error);
+    res.status(500).json({ message: 'Error verificando el correo electrónico', error: error.message });
   }
 };
 
@@ -122,7 +120,7 @@ export const resendCode = async (req, res) => {
     const { email } = req.body;
 
     const user = await User.findOne({ where: { email } });
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) return res.status(404).json({ message: "El usuario no ha sido encontrado." });
 
     const verificationCode = crypto.randomInt(100000, 999999);
     const expirationTime = new Date(Date.now() + 15 * 60 * 1000);
@@ -133,34 +131,38 @@ export const resendCode = async (req, res) => {
 
     await sendVerificationEmail(email, verificationCode);
 
-    res.status(200).json({ message: "New code sent to email" });
+    res.status(200).json({ message: "El código ha sido reenviado a su correo electrónico" });
   } catch (error) {
-    res.status(500).json({ message: "Error resending code", error: error.message });
+    res.status(500).json({ message: "Error al reenviar el código", error: error.message });
   }
 }
 
 export const login = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { identifier, password } = req.body;
 
-    if (!username) {
-      return res.status(400).json({ message: 'Email is required.' });
+    if (!identifier) {
+      return res.status(400).json({ message: 'El correo electrónico o el nombre de usuario es requerido.' });
     }
 
-    const user = await User.findOne({ where: { username } });
+    const isEmail = /\S+@\S+\.\S+/.test(identifier);
+
+    const user = await User.findOne({
+      where: isEmail ? { email: identifier } : { username: identifier }
+    });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
+      return res.status(404).json({ message: 'El usuario no ha sido encontrado.' });
     }
 
     if (!password) {
-      return res.status(400).json({ message: 'Password is required.' });
+      return res.status(400).json({ message: 'La contraseña es requerida.' });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Invalid password.' });
+      return res.status(401).json({ message: 'Contraseña inválida.' });
     }
 
     const token = jwt.sign({ 
@@ -178,10 +180,10 @@ export const login = async (req, res) => {
       maxAge: 15 * 60 * 1000 // 15 minutes
     });
 
-    res.status(200).json({ message: 'Login successful' });
+    res.status(200).json({ message: 'Sesión iniciada correctamente.' });
   } catch (error) {
-    console.error('Error logging in:', error);
-    res.status(500).json({ message: 'Error logging in', error: error.message });
+    console.error('Error al iniciar sesión:', error);
+    res.status(500).json({ message: 'Error al iniciar sesión', error: error.message });
   }
 }
 
@@ -192,10 +194,10 @@ export const logout = (req, res) => {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
     });
-    res.status(200).json({ message: 'Logout successful' });
+    res.status(200).json({ message: 'Sesión cerrada correctamente.' });
   } catch (error) {
-    console.error('Error logging out:', error);
-    res.status(500).json({ message: 'Error logging out', error: error.message });
+    console.error('Error al cerrar sesión:', error);
+    res.status(500).json({ message: 'Error al cerrar sesión', error: error.message });
   }
 }
 
@@ -204,25 +206,28 @@ export const passwordRecovery = async (req, res) => {
     const { email } = req.body;
 
     if (!email) {
-      return res.status(400).json({ message: 'Email is required.' });
+      return res.status(400).json({ message: 'El correo electrónico es requerido.' });
     }
 
     const user = await User.findOne({ where: { email } });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
+      return res.status(404).json({ message: 'El usuario no ha sido encontrado.' });
     }
+
+    const expirationTime = new Date(Date.now() + 15 * 60 * 1000); 
 
     const recoveryCode = crypto.randomInt(100000, 999999);
     user.code = recoveryCode;
+    user.codeExpiresAt = expirationTime;
     await user.save();
 
     await sendVerificationEmail(email, recoveryCode);
 
-    res.status(200).json({ message: 'Recovery code sent to your email.' });
+    res.status(200).json({ message: 'El código de recuperación ha sido enviado a tu correo electrónico.' });
   } catch (error) {
-    console.error('Error sending recovery code:', error);
-    res.status(500).json({ message: 'Error sending recovery code', error: error.message });
+    console.error('Error al enviar el correo de recuperación:', error);
+    res.status(500).json({ message: 'Error al enviar el correo de recuperación', error: error.message });
   }
 }
 
@@ -231,44 +236,81 @@ export const resetPassword = async (req, res) => {
     const { email, code, password, passwordConfirm } = req.body;
 
     if (!email) {
-      return res.status(400).json({ message: 'Email is required.' });
+      return res.status(400).json({ message: 'El correo electrónico es requerido.' });
     }
 
     if (!code) {
-      return res.status(400).json({ message: 'Recovery code is required.' });
+      return res.status(400).json({ message: 'El código de recuperación es requerido.' });
     }
 
     if (!password) {
-      return res.status(400).json({ message: 'New password is required.' });
+      return res.status(400).json({ message: 'Nueva contraseña es requerida.' });
     }
 
     if (!passwordConfirm) {
-      return res.status(400).json({ message: 'Password confirmation is required.' });
+      return res.status(400).json({ message: 'El campo confirmar contraseña es requerido.' });
     }
 
     if (password !== passwordConfirm) {
-      return res.status(400).json({ message: 'Passwords do not match.' });
+      return res.status(400).json({ message: 'Las contraseñas no coinciden.' });
     }
 
     const user = await User.findOne({ where: { email } });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
+      return res.status(404).json({ message: 'El usuario no ha sido encontrado.' });
     }
 
     if (user.code !== code) {
-      return res.status(400).json({ message: 'Invalid recovery code.' });
+      return res.status(400).json({ message: 'El código de recuperación es inválido.' });
+    }
+
+    if (user.codeExpiresAt < new Date()) {
+      return res.status(400).json({ message: 'El código de recuperación ha sido enviado a tu correo electrónico.' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     user.password = hashedPassword;
     user.code = null; 
+    user.codeExpiresAt = null;
     await user.save();
 
-    res.status(200).json({ message: 'Password reset successfully.' });
+    res.status(200).json({ message: 'La contraseña ha sido actualizada con éxito.' });
   } catch (error) {
-    console.error('Error resetting password:', error);
-    res.status(500).json({ message: 'Error resetting password', error: error.message });
+    console.error('Error al actualizar cotraseña:', error);
+    res.status(500).json({ message: 'Error al actualizar cotraseña', error: error.message });
+  }
+}
+
+export const updateUsername = async (req, res) => {
+  try {
+    const { username } = req.body;
+
+    if(!username) {
+        return res.status(400).json({ message: 'El usuario es requerido.' });
+    }
+
+    const existingUser = await User.findOne({ where: { username } });
+    
+    if (existingUser) {
+        return res.status(400).json({ message: 'El nombre de usuario ya existe.' });
+    }
+
+    const user = await User.findByPk(req.user.id);
+    if(!user) {
+        return res.status(404).json({ message: 'El usuario no ha sido encontrado.' });
+    }
+
+    user.username = username || user.username;
+    await user.save();
+
+    res.json({
+        message: 'El nombre de usuario ha sido actualizado correctamente.',
+        data: user.username
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 }
 
@@ -276,7 +318,7 @@ export const getCurrentUser = (req, res) => {
   try {
     res.status(200).json({ user: req.user });
   } catch (error) {
-    console.error('Error getting current user:', error);
-    res.status(500).json({ message: 'Error getting current user', error: error.message });
+    console.error('Error al obtener el usuario actual:', error);
+    res.status(500).json({ message: 'Error al obtener el usuario actual', error: error.message });
   }
 }

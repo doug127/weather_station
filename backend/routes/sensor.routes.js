@@ -4,6 +4,7 @@ import {
     paginated, 
     getById, 
     create, 
+    generateDescriptionSensor,
     update,
     destroy
 } from '../controllers/sensor.controller.js';
@@ -16,6 +17,7 @@ router.get('/', getAll);
 router.get('/paginated', paginated);
 router.get('/:id', getById);
 router.post('/create', create);
+router.post("/generate-description", generateDescriptionSensor);
 router.patch('/update/:id', verifyToken, authorizeRoles([adminRole]), update);
 router.delete('/destroy/:id', verifyToken, authorizeRoles([adminRole]), destroy);
 

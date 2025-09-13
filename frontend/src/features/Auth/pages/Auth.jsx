@@ -1,17 +1,20 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "@/shared/hooks/AuthContext";
 import { motion } from "framer-motion";
+import { Img } from "../layouts/Img";
 import { Input } from "@/shared/components/inputs/Input";
 import { ToggleButton } from "../components/buttons/Button";
-import { Img } from "../layouts/Img";
-import { AuthContext } from "@/shared/hooks/AuthContext";
-// import { useAuth } from "../hooks/useAuth";
+import { Button } from "@/shared/components/buttons/Button";
+import { SkeletonPage } from "@/shared/components/skeletons/SkeletonPage";
 
 export const Auth = () => {
+  const [showSkeleton, setShowSkeleton] = useState(true);
   const [optionForm, setOptionForm] = useState("Login");
-
-  // Estado para inputs de ejemplo
-  const [focusEmail, setFocusEmail] = useState(false);
   const [email, setEmail] = useState("");
+  const [focusEmail, setFocusEmail] = useState(false);
+  const [focusIdentifier, setFocusIdentifier] = useState(false);
+  const [identifier, setIdentifier] = useState("");
   const [focusPassword, setFocusPassword] = useState(false);
   const [password, setPassword] = useState("");
   const [focusUsername, setFocusUsername] = useState(false);
@@ -20,10 +23,11 @@ export const Auth = () => {
   const [passwordConfirm, setConfirmPassword] = useState("");
 
   const { login, loading, error, register } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const onSubmitLogin = (e) => {
     e.preventDefault();
-    login(username, password);
+    login(identifier, password);
   };
 
   const onSubmitRegister = (e) => {
@@ -31,11 +35,14 @@ export const Auth = () => {
     register(username, email, password, passwordConfirm);
   }
 
+  if(loading){
+    return <SkeletonPage/>;
+  }
+
   return (
     <div className="flex h-screen w-screen">
       {/* Left - Form */}
       <div className="relative flex flex-col justify-center items-center w-1/2 p-10">
-        {/* Botones toggle */}
         <ToggleButton option={optionForm} setOption={setOptionForm} />
 
         {/* Login Form */}
@@ -49,13 +56,13 @@ export const Auth = () => {
             >
               {/* Username */}
               <Input
-                label="Username"
-                value={username}
-                setValue={setUsername}
-                input={focusUsername}
-                setInput={setFocusUsername}
+                label="Correo o Nombre de Usuario"
+                value={identifier}
+                setValue={setIdentifier}
+                input={focusIdentifier}
+                setInput={setFocusIdentifier}
                 type="text"
-                validationType="username"
+                validationType="identifier"
               />
 
               {/* Password */}
@@ -67,13 +74,22 @@ export const Auth = () => {
                 setInput={setFocusPassword}
                 type="password"
               />
-              <button 
-              className="w-full bg-gray-900 text-white py-2 rounded-md hover:bg-gray-700"
-              type="submit"
-              onClick={onSubmitLogin}
+              <Button
+                type = "sumbit"
+                onClick = {onSubmitLogin}
+                variant = "primary"
+                size = "full"
               >
-                Login
-              </button>
+                Iniciar Sesión
+              </Button>
+              <Button
+                onClick= {() => navigate("/forgot-password")}
+                variant = "none"
+                size = "none"
+              >
+                ¿Olvidaste tu contraseña?
+              </Button>
+              
             </motion.div>
           )}
 
@@ -85,7 +101,6 @@ export const Auth = () => {
               transition={{ duration: 0.6, ease: "easeInOut" }}
               className="w-full max-w-sm space-y-4"
             >
-              {/* Username */}
               <Input
                 label="Username"
                 value={username}
@@ -96,7 +111,6 @@ export const Auth = () => {
                 validationType="username"
               />
 
-              {/* Email */}
               <Input
                 label="Email"
                 value={email}
@@ -107,7 +121,6 @@ export const Auth = () => {
                 validationType="email"
               />
 
-              {/* Password */}
               <Input
                 label="Password"
                 value={password}
@@ -128,13 +141,15 @@ export const Auth = () => {
                 validationType="passwordConfirm"
                 compareWith={password}
               />
-              <button 
-                className="w-full bg-gray-900 text-white py-2 rounded-md hover:bg-gray-700"
-                type="submit"
-                onClick={onSubmitRegister}
+              
+              <Button
+                type = "submit"
+                onClick = {onSubmitRegister}
+                size = "full"
               >
-                Register
-              </button>
+                Register  
+              </Button> 
+
             </motion.div>
           )}
         </div>

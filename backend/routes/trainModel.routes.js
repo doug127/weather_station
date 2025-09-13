@@ -6,7 +6,7 @@ import {
 
 const router = express.Router();
 
-router.get('/train-model', trainModel);
-router.get('/predict-model', predictWeather);
+router.post('/train-model', trainModel);
+router.post('/predict-model', predictWeather);
 
 export default router;

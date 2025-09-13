@@ -45,6 +45,7 @@ export const Input = ({
         setError(value.length < 3 ? "Username must be at least 3 characters." : "");
         break;
       }
+      
       default:
         setError("");
     }
@@ -69,7 +70,13 @@ export const Input = ({
             type === "password" ? "rounded-l-md" : "rounded-md"
           } ${value || input ? "border-1 border-gray-900" : "border-gray-200"}`}
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => {
+            if (type === "number") {
+              setValue(e.target.value ? Number(e.target.value) : ""); // convierte a número
+            } else {
+              setValue(e.target.value);
+            }
+          }}
           onFocus={() => setInput(true)}
           onBlur={() => setInput(false)}
           type={type === "password" && showPassword ? "text" : type}

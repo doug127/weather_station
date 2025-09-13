@@ -1,19 +1,24 @@
 import { useState, useEffect } from "react";
 import Chart from "react-apexcharts";
 import { api } from "@/shared/api/apiRoutes";
+import { SkeletonChart } from "@/shared/components/skeletons/SkeletonPage"; // tu skeleton
 
 export const PrcpChart = ({ dateLastYear, sensorPrcpChart }) => {
   const [options, setOptions] = useState({});
   const [series, setSeries] = useState([]);
   const [sensorInfo, setSensorInfo] = useState({ sensor: '', variable: '', unit: '', lastUpdated: '' });
   const [dateRange, setDateRange] = useState('all');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchSensorData = async () => {
       try {
         const response = await api.get(`/value/filtered?sensor=${sensorPrcpChart}&startDate=${dateLastYear}&sort=ASC`);
         const sensorData = response.data.data[0];
-        if (!sensorData) return;
+        if (!sensorData) {
+          setLoading(false);
+          return;
+        }
 
         let values = sensorData.values || [];
         if (dateRange === '15d') values = values.slice(-15);
@@ -52,6 +57,7 @@ export const PrcpChart = ({ dateLastYear, sensorPrcpChart }) => {
           unit: sensorData.unit,
           lastUpdated: response.data.lastUpdated
         });
+        setLoading(false); // fin de carga
       } catch (error) {
         console.error('Error fetching sensor data:', error);
       }
@@ -74,8 +80,13 @@ export const PrcpChart = ({ dateLastYear, sensorPrcpChart }) => {
         </select>
       </div>
       <p className="text-base font-normal text-gray-500">{sensorInfo.variable}</p>
+      {/* 🔹 Skeleton mientras carga */}
       <div className="mt-4 object-contain">
-        {series[0]?.data?.length > 0 && <Chart options={options} series={series} type="area" height={300} />}
+        {loading ? (
+          <SkeletonChart />
+        ) : (
+          <Chart options={options} series={series} type="area" height={300} />
+        )}
       </div>
       <div className="p-2 border-t order-gray-200 text-gray-400">
         <p>{sensorInfo.lastUpdated}</p>

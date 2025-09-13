@@ -7,8 +7,8 @@ export const getAll = async (req, res) => {
         const variables = await Variable.findAll();
         res.status(200).json({variables});
     } catch (error) {
-        console.error("Error fetching variables: ", error);
-        res.status(500).json({message: "Internal server error"})
+        console.error("Error al obtener variables: ", error);
+        res.status(500).json({message: "Error Interno del Servidor"})
     }
 }
 
@@ -16,12 +16,12 @@ export const getById = async (req, res) => {
     try {
         const variable = await Variable.findByPk(req.params.id);
         if(!variable){
-            res.status(404).json({message: "Variable not found"});
+            res.status(404).json({message: "Variable no encontrada."});
         }
         res.status(200).json({variable});
     } catch (error){
-        console.error("Error fetching variable: ", error);
-        res.status(500).json({message: "Internal server error"});
+        console.error("Error al obtener variables: ", error);
+        res.status(500).json({message: "Error Interno del Servidor"});
     }
 }
 
@@ -31,7 +31,7 @@ export const create = async (req, res) => {
 
         if (!name || !unit){
             return res.status(400).json({
-                message: "Name and unit required"
+                message: "Nombre y unidad de medida es requerido."
             });
         }
 
@@ -45,7 +45,7 @@ export const create = async (req, res) => {
 
         if (existingVariable) {
             return res.status(409).json({ 
-                message: "Variable already exists",
+                message: "La variable ya existe.",
                 existingVariable
             })    
         } 
@@ -56,13 +56,13 @@ export const create = async (req, res) => {
         })
 
         res.status(201).json({
-            message: "Variable created successfully",
+            message: "Variable creada correctamente.",
             data: newVariable
         });
          
     } catch (error){
-        console.error({"Error creating variables": error});
-        res.status(500).json({message: "Internal server error"});
+        console.error({"Error al crear variable": error});
+        res.status(500).json({message: "Error Interno del Servidor"});
     }
 }
 
@@ -71,7 +71,7 @@ export const update = async (req, res) => {
         const variable = await Variable.findByPk(req.params.id);
 
         if (!variable) {
-            return res.status(404).json({ message: "Variable not found" });
+            return res.status(404).json({ message: "Variable no encontrada." });
         }
 
         const { name, unit } = req.body;
@@ -95,7 +95,7 @@ export const update = async (req, res) => {
 
             if(existingVariable){
                 return res.status(409).json({
-                    message: "Variable name already exists",
+                    message: "El nombre de variable ya existe.",
                     existingVariable
                 })
             }
@@ -108,13 +108,13 @@ export const update = async (req, res) => {
         await variable.save();
 
         res.status(200).json({
-            message: "Variable updated successfully",
+            message: "Variable actualizada correctamente.",
             variable
         });
 
     } catch (error) {
-        console.error("Error updating variable:", error);
-        res.status(500).json({ message: "Internal server error" });
+        console.error("Error actualizado variable:", error);
+        res.status(500).json({ message: "Error Interno del Servidor" });
     }
 };
 
@@ -123,15 +123,15 @@ export const destory = async (req, res) => {
         const variable = await Variable.findByPk(req.params.id);
 
         if(!variable){
-            return res.status(404).json({ message: "Variable not found"});
+            return res.status(404).json({ message: "Variable no encontrada."});
         }
 
         await variable.destroy();
 
-        res.status(200).json({message: "Variable deleted successfully"});
+        res.status(200).json({message: "Variable eliminada correctamente."});
 
     } catch (error) {
-        console.error("Error deleting variable");
-        res.status(500).json({ message: "Internal server error"});
+        console.error("Error al eliminar variable");
+        res.status(500).json({ message: "Error Interno del Servidor"});
     }
 }
