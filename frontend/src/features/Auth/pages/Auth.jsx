@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "@/shared/hooks/AuthContext";
 import { motion } from "framer-motion";
@@ -43,10 +43,14 @@ export const Auth = () => {
     <div className="flex h-screen w-screen">
       {/* Left - Form */}
       <div className="relative flex flex-col justify-center items-center w-1/2 p-10">
-        <ToggleButton option={optionForm} setOption={setOptionForm} />
+        <ToggleButton 
+        option={optionForm} 
+        setOption={setOptionForm} 
+        leftOption="Login" 
+        rightOption="Register" />
 
         {/* Login Form */}
-        <div className="mt-24 w-full flex justify-center">
+        <div className=" w-full flex justify-center">
           {optionForm === "Login" && (
             <motion.div
               initial={{ x: 100, opacity: 0 }}

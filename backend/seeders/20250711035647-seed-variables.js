@@ -5,21 +5,23 @@
 
 export async function up(queryInterface, Sequelize) {
   const variablesData = [
-    ['Temperatura', '°C'],
-    ['Precipitación', 'mm'],
-    ['Insolación', 'horas'],
-    ['Dirección del viento', '°'],
-    ['Velocidad del viento', 'km/h'],
-    ['Humedad relativa', '%'],
-    ['Radiación solar', 'W/m²'],
-    ['Presión atmosférica', 'hPa'],
-    ['Evaporación', 'mm'],
+    ['Temperatura', '°C', -80, 70],
+    ['Precipitación', 'mm', 0, 100],
+    ['Insolación', 'horas', 0, 24],
+    ['Dirección del viento', '°', 0 , 360],
+    ['Velocidad del viento', 'km/h', 0, 150],
+    ['Humedad relativa', '%', 0, 100],
+    ['Radiación solar', 'W/m²', 0, 1361],
+    ['Presión atmosférica', 'hPa', 100, 1100],
+    ['Evaporación', 'mm', 0, 100],
   ];
 
   await queryInterface.bulkInsert('variables',
-    variablesData.map(([name, unit]) => ({
+    variablesData.map(([name, unit, min, max]) => ({
       name,
       unit,
+      min,
+      max,
       createdAt: new Date(),
       updatedAt: new Date()
     }))

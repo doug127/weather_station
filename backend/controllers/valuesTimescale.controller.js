@@ -222,7 +222,26 @@ export const createValue = async (req, res) => {
       });
 
       if (existingValue) {
-        skippedValues.push({ ...entry, reason: 'Valor duplicado para este momento y fechae' });
+        skippedValues.push({ ...entry, reason: 'Valor duplicado para este momento y fecha' });
+        hasDuplicates = true;
+        continue;
+      }
+
+      // 🔹 Validación de min y max
+      const sensor = await Sensor.findByPk(sensor_id, {
+        include: { model: Variable, attributes: ['min', 'max'] }
+      });
+
+      if (!sensor || !sensor.Variable) {
+        skippedValues.push({ ...entry, reason: 'Sensor o variable no encontrados' });
+        hasDuplicates = true;
+        continue;
+      }
+
+      const { min, max } = sensor.Variable;
+
+      if (value < min || value > max) {
+        skippedValues.push({ ...entry, reason: `Valor fuera de rango (${min} - ${max})` });
         hasDuplicates = true;
         continue;
       }
@@ -231,7 +250,7 @@ export const createValue = async (req, res) => {
     if (hasDuplicates && skippedValues.length > 0) {
       await transaction.rollback();
       return res.status(400).json({
-        message: 'Valor duplicado encontrado.',
+        message: 'Algunos valores fueron rechazados.',
         skippedValues
       });
     }

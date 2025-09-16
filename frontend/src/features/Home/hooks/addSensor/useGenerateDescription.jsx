@@ -3,6 +3,8 @@ import { api } from "@/shared/api/apiRoutes";
 
 export const useGenerateDescription = () => {
   const [descriptionIA, setDescriptionIA] = useState("");
+  const [suggestion, setSuggestion] = useState(""); // nueva
+  const [success, setSuccess] = useState(false);    // nueva
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -17,6 +19,8 @@ export const useGenerateDescription = () => {
       });
 
       setDescriptionIA(res.data.description);
+      setSuggestion(res.data.suggestion || "");
+      setSuccess(res.data.success);
       setShowModal(true);
     } catch (error) {
       console.error("Error al generar descripción:", error);
@@ -29,6 +33,8 @@ export const useGenerateDescription = () => {
 
   return {
     descriptionIA,
+    suggestion,
+    success,
     showModal,
     loading,
     generateDescription,

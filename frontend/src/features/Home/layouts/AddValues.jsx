@@ -8,6 +8,7 @@ import { SkeletonPage } from "@/shared/components/skeletons/SkeletonPage";
 
 export const AddValues = () => {
     const [formValues, setFormValues] = useState({});
+    const [errors, setErrors] = useState({});
     const [selectedTime, setSelectedTime] = useState("");
     const [selectedDate, setSelectedDate] = useState(""); 
     const [loading, setLoading] = useState(false);
@@ -20,6 +21,8 @@ export const AddValues = () => {
 
     const sensors = useSensors();
     const { sendValues } = useSendValues(formValues, selectedDate, selectedTime, resetForm, setLoading);
+    
+    const hasErrors = Object.values(errors).some(e => e);
 
     if (loading) {
         return <SkeletonPage />; // 👈 muestra skeleton en lugar del formulario
@@ -52,6 +55,8 @@ export const AddValues = () => {
                                     sensor={sensor} 
                                     formValues={formValues} 
                                     setFormValues={setFormValues} 
+                                    errors={errors}
+                                    setErrors={setErrors}
                                 />
                             ))}
                         </div>
@@ -61,6 +66,7 @@ export const AddValues = () => {
                         onClick={sendValues}
                         size= "full" 
                         className = "mt-4" 
+                        disabled={hasErrors || sensors.length === 0}
                     >
                         Registrar valores
                     </Button>

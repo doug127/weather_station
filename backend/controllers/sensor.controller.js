@@ -6,7 +6,7 @@ export const getAll = async (req, res) => {
   try {
     const sensors = await Sensor.findAll({
       include: [
-        { model: Variable, attributes: ['name', 'unit'] }
+        { model: Variable, attributes: ['name', 'unit', 'min', 'max'] }
       ]
     });
     res.json({
@@ -20,7 +20,9 @@ export const getAll = async (req, res) => {
           description: sensor.description,
           variable: {
             name: sensor.Variable.name,
-            unit: sensor.Variable.unit
+            unit: sensor.Variable.unit,
+            min: sensor.Variable.min,
+            max: sensor.Variable.max
           }
         }))
     });
@@ -74,7 +76,7 @@ export const getById = async (req, res) => {
     try {
         const sensor = await Sensor.findByPk(id, {
             include: [
-                { model: Variable, attributes: ['name', 'unit'] }
+                { model: Variable, attributes: ['name', 'unit', 'min', 'max'] }
             ]
         });
         if (!sensor) {
@@ -89,7 +91,9 @@ export const getById = async (req, res) => {
                 description: sensor.description,
                 variable: {
                     name: sensor.Variable.name,
-                    unit: sensor.Variable.unit
+                    unit: sensor.Variable.unit,
+                    min: sensor.Variable.min,
+                    max: sensor.Variable.max
                 }
             }
         });
@@ -113,7 +117,22 @@ export const generateDescriptionSensor = async (req, res) => {
 
         const description = await generateDescription(name, variableData.name, variableData.unit);
 
-        res.status(200).json({ description });
+        const isSuccess = description && description.split(" ").length > 30; 
+        
+        if (isSuccess) {
+            return res.status(200).json({
+                success: true,
+                confirm: true, 
+                description
+            });
+            } else {
+            return res.status(200).json({
+                success: false,
+                confirm: false,
+                description,
+                suggestion: "Corrija el nombre del sensor o la variable antes de continuar."
+            });
+        }
     } catch (error) {
         res.status(500).json({ message: "Error generando descripción", error: error.message });
     }
@@ -171,25 +190,28 @@ export const create = async (req, res) => {
 export const update = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, code, description, variableId} = req.body;
+        const { nombre, codigo, descripcion, variable, serial } = req.body;
 
         const sensor = await Sensor.findByPk(id);
         if (!sensor) {
             return res.status(404).json({ message: 'Sensor no encontrado.' });
         }
 
-        if (variableId) {
-            const variable = await Variable.findByPk(variableId);
-            if (!variable) {
+        // Si se envía "variable" como nombre, buscamos el ID en la tabla Variable
+        let variableId = sensor.variableId;
+        if (variable) {
+            const variableDb = await Variable.findOne({ where: { name: variable } });
+            if (!variableDb) {
                 return res.status(404).json({ message: 'Variable no encontrada.' });
             }
+            variableId = variableDb.id;
         }
 
-        sensor.name = name || sensor.name;
-        sensor.code = code || sensor.code;
+        sensor.name = nombre || sensor.name;
+        sensor.code = codigo || sensor.code;
         sensor.serial = serial || sensor.serial;
-        sensor.description = description || sensor.description;
-        sensor.variableId = variableId || sensor.variableId;
+        sensor.description = descripcion || sensor.description;
+        sensor.variableId = variableId;
 
         await sensor.save();
 
@@ -200,7 +222,8 @@ export const update = async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
-}
+};
+
 
 export const destroy = async (req, res) => {
     const { id } = req.params;

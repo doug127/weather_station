@@ -88,9 +88,9 @@ export const PrcpChart = ({ dateLastYear, sensorPrcpChart }) => {
           <Chart options={options} series={series} type="area" height={300} />
         )}
       </div>
-      <div className="p-2 border-t order-gray-200 text-gray-400">
+      {/* <div className="p-2 border-t order-gray-200 text-gray-400">
         <p>{sensorInfo.lastUpdated}</p>
-      </div>
+      </div> */}
     </div>
   );
 };
