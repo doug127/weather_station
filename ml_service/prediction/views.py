@@ -3,8 +3,9 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .models import TrainedModel, PredictModel
 from .serializers import TrainedModelSerializer, PredictModelSerializer
-from .utils import structure_data, train_model_rf, make_prediction, load_latest_model
-from sklearn.metrics import confusion_matrix, recall_score, f1_score, mean_squared_error
+from .utils import structure_data, structure_data_single_row, train_model, make_prediction, load_latest_model
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+import numpy as np
 import os
 import joblib
 from datetime import datetime
@@ -15,56 +16,44 @@ class TrainedModelViewSet(viewsets.ModelViewSet):
 
 class TrainedModelView(APIView):
     def post(self, request):
-        # print('POST recibido con data:', request.data)
-
         model_name = request.data.get('model_name')
         json_data = request.data.get('json_data')
+        targets = request.data.get('targets', [])
 
-        if not model_name or not json_data:
-            return Response({'error': 'model_name y json_data son requeridos'}, status=400)
-        
+        if not model_name or not json_data or not targets:
+            return Response(
+                {'error': 'model_name, json_data y targets son requeridos'},
+                status=400
+            )
+
         try:
             df = structure_data(json_data)
-            model, y_true, y_pred, date = train_model_rf(df)
+            models, metrics = train_model(df, targets=targets)
         except Exception as e:
             import traceback
-            print("❌ Error en structure_data o train_model_rf:")
+            print("❌ Error en entrenamiento:")
             traceback.print_exc()
-            return Response({'error': str(e)}, status = 400)
-    
-        tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
-        rain_pred = int((y_pred == 1).sum())
-        no_rain_pred = int((y_pred == 0).sum())
+            return Response({'error': str(e)}, status=400)
 
-        rain_recall = recall_score(y_true, y_pred, pos_label=1)
-        no_rain_recall = recall_score(y_true, y_pred, pos_label=0)
-
-        rain_f1 = f1_score(y_true, y_pred, pos_label=1)
-        no_rain_f1 = f1_score(y_true, y_pred, pos_label=0)
-
-        mse = round(float(mean_squared_error(y_true, y_pred)), 2)
-
+        # Guardar todos los modelos en un solo archivo
         MODEL_DIR = "./storage"
         os.makedirs(MODEL_DIR, exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         file_path = os.path.join(MODEL_DIR, f"{model_name}_{timestamp}.joblib")
-        joblib.dump(model, file_path)
+        joblib.dump(models, file_path)  # 👈 ahora guarda varios modelos
 
         model_instance = TrainedModel.objects.create(
             model_name=model_name,
             path_to_file=file_path,
-            tp=tp, tn=tn, fp=fp, fn=fn,
-            rain_pred=rain_pred, no_rain_pred=no_rain_pred,
-            rain_recall=rain_recall, no_rain_recall=no_rain_recall,
-            rain_f1_score=rain_f1, no_rain_f1_score=no_rain_f1,
-            json_data=json_data, mse=mse
+            metrics=metrics,
+            target_variables=targets
         )
 
         return Response({
-                'message': 'Trained model and saved successfully',
-                'data': TrainedModelSerializer(model_instance).data,
-            }, status=201)
+            'message': 'Trained models saved successfully',
+            'data': TrainedModelSerializer(model_instance).data
+        }, status=201)
 
 
 class PredictModelViewSet(viewsets.ModelViewSet):
@@ -74,42 +63,51 @@ class PredictModelViewSet(viewsets.ModelViewSet):
 class PredictModelView(APIView):
     def post(self, request):
         try:
-            json_data = request.data.get('json_data')
-            if not json_data:
-                return Response({'error': 'json_data es requerido'}, status=400)
-            # Convertir JSON a DataFrame
-            df = structure_data(json_data)
+            json_data = request.data
 
-            # Asegurar que solo haya una fila (ej. fecha filtrada)
-            if len(df) != 1:
-                return Response({'error': 'Se esperaba una sola fila para predicción'}, status=400)
+            if not json_data or "data" not in json_data:
+                return Response(
+                    {"error": "El body debe contener una clave 'data' con los sensores"}, 
+                    status=400
+                )
 
-            # Cargar último modelo entrenado
-            last_model, model = load_latest_model()
+            data_list = json_data["data"]
+            if not isinstance(data_list, list) or len(data_list) != 1:
+                return Response(
+                    {"error": "Se esperaba una lista con exactamente una fila"}, 
+                    status=400
+                )
 
-            # Hacer predicción
-            pred, prob, trust, used_features = make_prediction(model, df, json_data)
+            df = structure_data_single_row(data_list)
 
-            # Guardar en BD
+            # Cargar último modelo
+            last_model, models_dict = load_latest_model()
+
+            # Seleccionar target
+            target_name = last_model.target_variables[0]  # por ejemplo el primero
+            model = models_dict[target_name]
+
+            # Generar predicción
+            pred, used_features = make_prediction(model, df)
+
+            # Guardar en la BD
             prediction_instance = PredictModel.objects.create(
                 trained_model=last_model,
-                rain_pred=bool(pred),
-                probability=round(prob, 4),
-                trust=round(trust, 4)
+                predictions={
+                    "input_data": data_list[0],
+                    "prediction_value": pred
+                }
             )
 
             return Response({
-                'message': 'Predicción generada con éxito',
-                'rain_pred': bool(pred),
-                'probability': round(prob, 4),
-                'trust': round(trust, 4),
-                'features_used': used_features,
-                'model_used': last_model.model_name
+                "message": "Predicción generada con éxito",
+                "prediction": prediction_instance.predictions,
+                "features_used": used_features,
+                "model_used": last_model.model_name
             }, status=200)
 
         except Exception as e:
             import traceback
             print("❌ Error en predicción:")
             traceback.print_exc()
-            return Response({'error': str(e)}, status=500)
-
+            return Response({"error": str(e)}, status=500)

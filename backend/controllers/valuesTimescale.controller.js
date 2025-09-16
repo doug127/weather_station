@@ -8,7 +8,7 @@ export const insertMeteostatData = async (req, res) => {
         const { station, start, end } = req.query;
         
         if (!station || !start || !end) {
-            return res.status(400).json({ message: 'Missing required query parameters: station, start, end' });
+            return res.status(400).json({ message: 'Faltan parámetros de consulta obligatorios: estación, inicio, fin' });
         } 
 
         const response = await getWeatherData(station, start, end);
@@ -26,7 +26,7 @@ export const insertMeteostatData = async (req, res) => {
       
             const sensor = await Sensor.findOne({ where: { code } });
             if (!sensor) {
-              skipped.push({ code, reason: 'Sensor not found' });
+              skipped.push({ code, reason: 'Sensor no encontrado.' });
               continue
             };
             
@@ -37,7 +37,7 @@ export const insertMeteostatData = async (req, res) => {
             });
 
             if (existingValue) {
-              skipped.push({ code, timestamp, reason: 'Value already exists' });
+              skipped.push({ code, timestamp, reason: 'El valor ya existe.' });
               continue;
             }
 
@@ -52,12 +52,12 @@ export const insertMeteostatData = async (req, res) => {
         }
 
         res.status(200).json({ 
-          message: 'Values processed successfully',
+          message: 'Valores procesados correctamente.',
           inserted: inserted.length,
           skipped
         });
     } catch (error) {
-        console.error('Error processing values:', error);
+        console.error('Error al procesar valores:', error);
         res.status(500).json({ message: error.message });
     }
 }
@@ -75,13 +75,12 @@ export const getFilteredValuesData = async (req, res) => {
       if (maxValue !== undefined) whereClause.value[Op.lte] = parseFloat(maxValue);
     }
 
-    const meditionWhere = {};
     if (startDate && endDate) {
-      meditionWhere.date = { [Op.between]: [startDate, endDate] };
+      whereClause.timestamp = { [Op.between]: [startDate, endDate] };
     } else if (startDate) {
-      meditionWhere.date = { [Op.gte]: startDate };
+      whereClause.timestamp = { [Op.gte]: startDate };
     } else if (endDate) {
-      meditionWhere.date = { [Op.lte]: endDate };
+      whereClause.timestamp = { [Op.lte]: endDate };
     }
 
     let sensorWhere;
@@ -162,11 +161,11 @@ export const getFilteredValuesData = async (req, res) => {
     }
 
   } catch (error) {
-    console.error('Error fetching filtered values:', error);
-    res.status(500).json({ 
-      message: 'Error al obtener valores filtrados',
-      error: error.message 
-    });
+      console.error('Error al obtener valores filtrados:', error);
+      res.status(500).json({ 
+        message: 'Error al obtener valores filtrados',
+        error: error.message 
+      });
   }
 }
 
@@ -175,7 +174,7 @@ export const filteredValues = async (req, res) => {
     const result = await getFilteredValuesData(req.query);
     res.json(result);
   } catch (error) {
-    console.error('Error en filteredValues', error);
+    console.error('Error al obtener valores filtrados:', error);
     res.status(500).json({message: 'Error al obtener valores filtrados'});
   }
 }
@@ -191,28 +190,28 @@ export const createValue = async (req, res) => {
 
     if (!timestamp || !Array.isArray(values)) {
       await transaction.rollback();
-      return res.status(400).json({ message: 'Missing required fields or invalid data format' });
+      return res.status(400).json({ message: 'Faltan campos obligatorios o el formato de datos no es válido.' });
     }
 
     for (const entry of values) {
       const { sensor_id, value } = entry;
 
       if (!sensor_id) {
-        skippedValues.push({ ...entry, reason: 'Missing sensor_id' });
+        skippedValues.push({ ...entry, reason: 'Falta el sensor Id' });
         hasDuplicates = true;
         continue;
       }
 
       const ts = new Date(timestamp);
       if (isNaN(ts.getTime())) {
-        skippedValues.push({ ...entry, reason: 'Invalid timestamp' });
+        skippedValues.push({ ...entry, reason: 'Marca de tiempo no válida.' });
         hasDuplicates = true;
         continue;
       }
 
       const now = new Date();
       if (ts > now) {
-        skippedValues.push({ ...entry, reason: 'Timestamp is in the future' });
+        skippedValues.push({ ...entry, reason: 'La marca de tiempo está en el futuro.' });
         hasDuplicates = true;
         continue;
       }
@@ -223,7 +222,7 @@ export const createValue = async (req, res) => {
       });
 
       if (existingValue) {
-        skippedValues.push({ ...entry, reason: 'Duplicate value for this moment and date' });
+        skippedValues.push({ ...entry, reason: 'Valor duplicado para este momento y fechae' });
         hasDuplicates = true;
         continue;
       }
@@ -232,7 +231,7 @@ export const createValue = async (req, res) => {
     if (hasDuplicates && skippedValues.length > 0) {
       await transaction.rollback();
       return res.status(400).json({
-        message: 'Duplicate values found',
+        message: 'Valor duplicado encontrado.',
         skippedValues
       });
     }
@@ -252,7 +251,7 @@ export const createValue = async (req, res) => {
     await transaction.commit();
 
     return res.status(201).json({
-      message: 'All values inserted successfully',
+      message: 'Todos los valores se insertaron correctamente.',
       inserted: createdValues.length,
       createdValues
     });
@@ -261,7 +260,7 @@ export const createValue = async (req, res) => {
     await transaction.rollback();
     console.error('Error:', error);
     res.status(500).json({
-      message: 'Internal server error',
+      message: 'Error Interno del Servidor',
       error: error.message
     });
   }

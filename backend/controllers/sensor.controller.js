@@ -1,4 +1,5 @@
 import {Sensor, Variable} from '../models/index.js';
+import { generateDescription } from '../services/aiService.js';
 import { Op } from 'sequelize';
 
 export const getAll = async (req, res) => {
@@ -9,12 +10,14 @@ export const getAll = async (req, res) => {
       ]
     });
     res.json({
-        message: 'Sensors retrieved successfully',
+        message: 'Sesnores mostrados correctamente.',
         total: sensors.length,
         data: sensors.map(sensor => ({
           id: sensor.id,
           serial: sensor.serial,
+          code: sensor.code,
           name: sensor.name,
+          description: sensor.description,
           variable: {
             name: sensor.Variable.name,
             unit: sensor.Variable.unit
@@ -44,7 +47,7 @@ export const paginated = async (req, res) => {
         const totalPages = Math.ceil(count / limit);
 
         res.json({
-            message: 'Sensors retrieved successfully',
+            message: 'Sesnores mostrados correctamente.',
             total: count,
             page,
             totalPages,
@@ -52,6 +55,7 @@ export const paginated = async (req, res) => {
                 id: sensor.id,
                 serial: sensor.serial,
                 name: sensor.name,
+                description: sensor.description,
                 variable: {
                     name: sensor.Variable.name,
                     unit: sensor.Variable.unit
@@ -74,14 +78,15 @@ export const getById = async (req, res) => {
             ]
         });
         if (!sensor) {
-            return res.status(404).json({ message: 'Sensor not found' });
+            return res.status(404).json({ message: 'Sensor no encontrado.' });
         }
         res.json({
-            message: 'Sensor retrieved successfully',
+            message: 'Sesnor mostrado correctamente.',
             data: {
                 id: sensor.id,
                 serial: sensor.serial,
                 name: sensor.name,
+                description: sensor.description,
                 variable: {
                     name: sensor.Variable.name,
                     unit: sensor.Variable.unit
@@ -93,14 +98,34 @@ export const getById = async (req, res) => {
     }
 }
 
+export const generateDescriptionSensor = async (req, res) => {
+    try {
+        const { name, variable } = req.body;
+
+        if (!name || !variable) {
+            return res.status(400).json({ message: "Faltan datos requeridos." });
+        }
+
+        const variableData = await Variable.findOne({ where: { name: variable } });
+        if (!variableData) {
+            return res.status(404).json({ message: "Variable no encontrada." });
+        }
+
+        const description = await generateDescription(name, variableData.name, variableData.unit);
+
+        res.status(200).json({ description });
+    } catch (error) {
+        res.status(500).json({ message: "Error generando descripción", error: error.message });
+    }
+};
+
 export const create = async (req, res) => {   
     try {
-        const {name, code, serial, variableId} = req.body;
-        
-        const variable = await Variable.findByPk(variableId);
-        
-        if (!variable) {
-            return res.status(404).json({ message: `Variable not found` });
+        const { name, code, serial, variable, description } = req.body;
+
+        const variableName = await Variable.findOne({ where: { name: variable } });
+        if (!variableName) {
+            return res.status(404).json({ message: `Variable no encontrada.` });
         }
 
         const existingSensor = await Sensor.findOne({
@@ -114,7 +139,7 @@ export const create = async (req, res) => {
 
         if (existingSensor) {
             return res.status(409).json({
-                message: 'Sensor with the same name or code already exists',
+                message: 'Ya existe un sensor con el mismo nombre o código.',
                 conflict: {
                     field: existingSensor.name === name ? 'name' : 'code',
                     value: existingSensor.name === name ? name : code
@@ -126,47 +151,50 @@ export const create = async (req, res) => {
             name,
             code,
             serial,
-            variableId,
+            variableId: variableName.id,
+            description
         });
+
         res.status(201).json({
-            message: 'Sensor created successfully',
-            data: sensor
+            message: 'Sensor creado correctamente.',
+            data: { name, code, serial, variable: variable.name, description }
         });
 
     } catch (error) {
         res.status(500).json({ 
-            message: 'Error creating sensor1',
+            message: 'Error al crear el sensor.',
             error: error.message 
         });
     }
-}
+};
 
 export const update = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, code, variableId} = req.body;
+        const { name, code, description, variableId} = req.body;
 
         const sensor = await Sensor.findByPk(id);
         if (!sensor) {
-            return res.status(404).json({ message: 'Sensor not found' });
+            return res.status(404).json({ message: 'Sensor no encontrado.' });
         }
 
         if (variableId) {
             const variable = await Variable.findByPk(variableId);
             if (!variable) {
-                return res.status(404).json({ message: 'Variable not found' });
+                return res.status(404).json({ message: 'Variable no encontrada.' });
             }
         }
 
         sensor.name = name || sensor.name;
         sensor.code = code || sensor.code;
         sensor.serial = serial || sensor.serial;
+        sensor.description = description || sensor.description;
         sensor.variableId = variableId || sensor.variableId;
 
         await sensor.save();
 
         res.json({
-            message: 'Sensor updated successfully',
+            message: 'Sensor actualizado correctamente.',
             data: sensor
         });
     } catch (error) {
@@ -179,10 +207,10 @@ export const destroy = async (req, res) => {
     try {
         const sensor = await Sensor.findByPk(id);
         if (!sensor) {
-            return res.status(404).json({ message: 'Sensor not found' });
+            return res.status(404).json({ message: 'Sensor no encontrado.' });
         }
         await sensor.destroy();
-        res.json({ message: 'Sensor deleted successfully' });
+        res.json({ message: 'Sensor eliminado correctamente.' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

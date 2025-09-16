@@ -39,6 +39,10 @@ export const User = sequelize.define('User', {
         type: DataTypes.INTEGER,
         allowNull: true
     },
+    codeExpiresAt: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
     createdAt: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW
