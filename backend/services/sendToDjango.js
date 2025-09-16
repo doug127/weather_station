@@ -121,10 +121,6 @@ export const trainModel = async (req, res) => {
   }
 };
 
-
-
-
-
 export const predictWeather = async (req, res) => {
   try {
     console.log("🔍 Node recibió body:", JSON.stringify(req.body, null, 2));

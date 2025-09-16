@@ -1,3 +1,4 @@
+import ExcelJS from 'exceljs';
 import {Sensor, ValuesTimescaled, Variable} from '../models/index.js'; 
 import { getWeatherData } from '../services/meteostat.js';
 import {sequelize} from '../server/db.js'; 
@@ -282,5 +283,135 @@ export const createValue = async (req, res) => {
       message: 'Error Interno del Servidor',
       error: error.message
     });
+  }
+};
+
+export const uploadValues = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
+  try {
+    if (!req.file) {
+      await transaction.rollback();
+      return res.status(400).json({ message: "No se subió ningún archivo." });
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(req.file.path);
+    const worksheet = workbook.worksheets[0]; // primera hoja
+
+    if (!worksheet) {
+      await transaction.rollback();
+      return res.status(400).json({ message: "El archivo está vacío." });
+    }
+
+    // 🔹 Cabeceras
+    const headers = worksheet.getRow(1).values.slice(1); // quitamos el primer elemento vacío
+    if (headers.length < 2 || headers[0] !== "datetime") {
+      await transaction.rollback();
+      return res.status(400).json({ message: "La primera columna debe ser 'datetime'." });
+    }
+
+    const sensorCodes = headers.slice(1);
+
+    // 🔹 Verificar si todos los sensor codes existen
+    const sensors = await Sensor.findAll({
+      where: { code: sensorCodes },
+      include: { model: Variable, attributes: ["min", "max"] },
+      transaction,
+    });
+
+    if (sensors.length !== sensorCodes.length) {
+      const dbCodes = sensors.map(s => s.code);
+      const missing = sensorCodes.filter(c => !dbCodes.includes(c));
+      await transaction.rollback();
+      return res.status(400).json({
+        message: `Los siguientes códigos de sensor no existen: ${missing.join(", ")}`,
+      });
+    }
+
+    // 🔹 Crear un map para acceso rápido sensorCode → sensorId + variable info
+    const sensorMap = {};
+    sensors.forEach(s => {
+      sensorMap[s.code] = {
+        id: s.id,
+        min: s.Variable.min,
+        max: s.Variable.max,
+      };
+    });
+
+    const valuesToInsert = [];
+    const datetimesSet = new Set();
+
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return; // saltar cabecera
+
+      const datetime = new Date(row.getCell(1).value);
+
+      if (isNaN(datetime.getTime())) {
+        throw new Error(`Fila ${rowNumber}: datetime inválido`);
+      }
+
+      // Validar duplicados dentro del archivo
+      const key = datetime.toISOString();
+      if (datetimesSet.has(key)) {
+        throw new Error(`Fila ${rowNumber}: datetime repetido dentro del archivo (${key})`);
+      }
+      datetimesSet.add(key);
+
+      // Validar duplicados en BD
+      valuesToInsert.push({ datetime, row });
+    });
+
+    // 🔹 Verificar duplicados en BD antes de continuar
+    const existing = await ValuesTimescaled.findAll({
+      where: { timestamp: Array.from(datetimesSet) },
+      transaction,
+    });
+
+    if (existing.length > 0) {
+      const existingDates = existing.map(e => e.timestamp.toISOString());
+      throw new Error(`Los siguientes datetime ya existen en la base de datos: ${existingDates.join(", ")}`);
+    }
+
+    // 🔹 Validar rangos y preparar inserciones
+    const finalInsert = [];
+
+    for (const { datetime, row } of valuesToInsert) {
+      row.values.slice(2).forEach((val, idx) => {
+        const code = sensorCodes[idx];
+        const { id, min, max } = sensorMap[code];
+        const value = parseFloat(val);
+
+        if (isNaN(value)) {
+          throw new Error(`Fila ${row.number}, sensor ${code}: valor no numérico`);
+        }
+
+        if (value < min || value > max) {
+          throw new Error(
+            `Fila ${row.number}, sensor ${code}: valor fuera de rango (${min}-${max}), recibido: ${value}`
+          );
+        }
+
+        finalInsert.push({
+          sensor_id: id,
+          timestamp: datetime,
+          value,
+        });
+      });
+    }
+
+    // 🔹 Insertar en DB
+    await ValuesTimescaled.bulkCreate(finalInsert, { transaction });
+    await transaction.commit();
+
+    return res.status(201).json({
+      message: "Valores cargados exitosamente.",
+      inserted: finalInsert.length,
+    });
+
+  } catch (error) {
+    await transaction.rollback();
+    console.error("Error uploadValues:", error);
+    return res.status(400).json({ message: error.message });
   }
 };

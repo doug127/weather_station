@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card } from "./card/Card";
 import { djangoApi } from "@/shared/api/apiRoutes";
+import { TrainAndPredict } from "@/features/Home/components/prediction/TrainAndPredict";
 
 // Función para formatear la fecha tipo "Lunes, 16 de septiembre"
 const formatDate = (dateString) => {
@@ -14,6 +15,7 @@ const formatDate = (dateString) => {
 
 export const KPIs = () => {
   const [predictions, setPredictions] = useState(null);
+  const AdminRole = 1;
 
   useEffect(() => {
     const fetchPredictions = async () => {
@@ -43,20 +45,32 @@ export const KPIs = () => {
         Predicciones del día ({formattedDate})
       </h3>
 
-      {/* Grid de Cards */}
-      <div className="grid lg:gap-6 md:gap-4 gap-2 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
+      {/* <TrainAndPredict user={{ role_id: AdminRole }} /> */}
+
+      {/* Contenedor flexible para las Cards */}
+      <div className="flex flex-wrap justify-start gap-4">
         {Object.entries(predValues).map(([key, value]) => {
-          const inputValue = predictions.input_data[key];
-          const icon =
-            value >= inputValue ? "fa-chart-line-up" : "fa-chart-line-down";
+          const inputValue = input_data[key];
+          const icon = value >= inputValue ? "fa-chart-line-up" : "fa-chart-line-down";
 
           return (
-            <Card
+            <div
               key={key}
-              icon={icon}
-              title={key.toUpperCase()}
-              value={`${value.toFixed(2)} (input: ${inputValue})`}
-            />
+              className="flex-1 min-w-[220px] max-w-[32%] bg-white rounded-md shadow-lg p-4 flex items-center gap-4"
+            >
+              {/* Icono */}
+              <div className="flex-shrink-0 text-white bg-gray-900 w-12 h-12 rounded-md flex justify-center items-center text-2xl">
+                <i className={`fa-solid ${icon}`}></i>
+              </div>
+
+              {/* Información */}
+              <div className="flex flex-col">
+                <p className="text-gray-700 font-medium">{key.toUpperCase()}</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {value.toFixed(2)} (input: {inputValue})
+                </p>
+              </div>
+            </div>
           );
         })}
       </div>
