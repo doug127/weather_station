@@ -8,7 +8,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import numpy as np
 import os
 import joblib
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class TrainedModelViewSet(viewsets.ModelViewSet):
     queryset = TrainedModel.objects.all()
@@ -59,6 +59,26 @@ class TrainedModelView(APIView):
 class PredictModelViewSet(viewsets.ModelViewSet):
     queryset = PredictModel.objects.all()
     serializer_class = PredictModelSerializer
+
+class PredictModelLatestView(APIView):
+    def get(self, request):
+        try:
+            # Última fila en base a la fecha
+            latest = PredictModel.objects.latest("prediction_date")
+
+            # Fecha de predicción -> día siguiente
+            next_day = latest.prediction_date + timedelta(days=1)
+
+            data = {
+                "prediction_date": next_day,
+                "predictions": latest.predictions.get("predictions", {}),  # Solo la sección predictions
+                "input_data": latest.predictions.get("input_data", {})  # Datos de entrada usados
+            }
+
+            return Response(data, status=status.HTTP_200_OK)
+
+        except PredictModel.DoesNotExist:
+            return Response({"error": "No predictions found"}, status=status.HTTP_404_NOT_FOUND)
 
 class PredictModelView(APIView):
     def post(self, request):

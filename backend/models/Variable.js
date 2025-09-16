@@ -16,8 +16,15 @@ export const Variable = sequelize.define("Variable", {
         type: DataTypes.STRING,
         allowNull: false,
         required: true,
+    },
+    min: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+    },
+    max: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
     }
-},
-{
+}, {
     tableName: 'variables'
 })

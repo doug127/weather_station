@@ -18,6 +18,14 @@ export const up = async (queryInterface, Sequelize) => {
       type: Sequelize.STRING,
       allowNull: false
     },
+    min: {
+      type: Sequelize.FLOAT,
+      allowNull: false
+    },
+    max: {
+      type: Sequelize.FLOAT,
+      allowNull: false
+    },
     createdAt: {
       type: Sequelize.DATE,
       allowNull: false,
