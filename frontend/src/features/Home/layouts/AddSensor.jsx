@@ -21,6 +21,8 @@ export const AddSensor = () => {
   const [inputModCodigo, setInputModCodigo] = useState(false);
   const [inputModNombre, setInputModNombre] = useState(false);
 
+ 
+
   const {
     regSerial, setRegSerial,
     regCodigo, setRegCodigo,
@@ -39,12 +41,20 @@ export const AddSensor = () => {
     sendData, updateData,
   } = useSensorForm();
 
+   const isRegisterDisabled =
+  !regSerial || 
+  !regCodigo || 
+  !regNombre || 
+  !regVariable || 
+  !regDescripcion;
+
   const {
     descriptionIA,
     suggestion,
     success,
     showModal,
     loading,
+    manualFallback,
     generateDescription,
     closeModal,
   } = useGenerateDescription();
@@ -95,71 +105,88 @@ export const AddSensor = () => {
 
             {/* FORMULARIO REGISTRAR */}
             {optionForm === "Registrar" && (
-              <motion.div
-                initial={{ x: 100, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ duration: 0.6 }}
-                className="w-full max-w-lg space-y-4"
+            <motion.div
+              initial={{ x: 100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.6 }}
+              className="w-full max-w-lg space-y-4"
+            >
+              <Input label="Serial" value={regSerial} setValue={setRegSerial} type="text" input={inputRegSerial} setInput={setInputRegSerial} />
+              <Input label="Código" value={regCodigo} setValue={setRegCodigo} type="text" input={inputRegCodigo} setInput={setInputRegCodigo} />
+              <Input label="Nombre del sensor" value={regNombre} setValue={setRegNombre} type="text" input={inputRegNombre} setInput={setInputRegNombre} />
+
+              <select
+                className="p-2 border w-full rounded cursor-pointer outline-none"
+                value={regVariable}
+                onChange={(e) => setRegVariable(e.target.value)}
               >
-                <Input label="Serial" value={regSerial} setValue={setRegSerial} type="text" input={inputRegSerial} setInput={setInputRegSerial} />
-                <Input label="Código" value={regCodigo} setValue={setRegCodigo} type="text" input={inputRegCodigo} setInput={setInputRegCodigo} />
-                <Input label="Nombre del sensor" value={regNombre} setValue={setRegNombre} type="text" input={inputRegNombre} setInput={setInputRegNombre} />
+                <option value="" disabled hidden>Seleccionar variable</option>
+                {dataVariable.map(v => (
+                  <option key={v.id} value={v.name}>{v.name}</option>
+                ))}
+              </select>
 
-                <select
-                  className="p-2 border w-full rounded cursor-pointer outline-none"
-                  value={regVariable}
-                  onChange={(e) => setRegVariable(e.target.value)}
-                >
-                  <option value="" disabled hidden>Seleccionar variable</option>
-                  {dataVariable.map(v => (
-                    <option key={v.id} value={v.name}>{v.name}</option>
-                  ))}
-                </select>
+              <Button
+                onClick={() => generateDescription(regNombre, regVariable)}
+                disabled={!regNombre || !regVariable}
+                variant="primary"
+                size="full"
+              >
+                {loading ? "Generando..." : "Generar descripción"}
+              </Button>
 
-                <Button
-                  onClick={() => generateDescription(regNombre, regVariable)}
-                  disabled={!regNombre || !regVariable}
-                  variant="primary"
-                  size="full"
-                >
-                  Generar descripción
-                </Button>
+              {/* 🔹 Caso 1: Modal IA */}
+              {showModal && (
+                <Modal
+                  descriptionIA={descriptionIA}
+                  success={success}
+                  suggestion={suggestion}
+                  onApprove={handleApprove}
+                  onClose={closeModal}
+                />
+              )}
 
-                {showModal && (
-                  <Modal
-                    descriptionIA={descriptionIA}
-                    success={success}
-                    suggestion={suggestion}
-                    onApprove={handleApprove}
-                    onClose={closeModal}
+              {/* 🔹 Caso 2: Fallback manual */}
+              {manualFallback && (
+                <div className="mt-4">
+                  <p className="text-gray-600">El servicio de IA no respondió a tiempo. Ingresa la descripción manualmente:</p>
+                  <textarea
+                    className="w-full p-2 mt-2 border rounded-md"
+                    rows="4"
+                    value={regDescripcion}
+                    onChange={(e) => setRegDescripcion(e.target.value)}
+                    placeholder="Escribe la descripción del sensor aquí..."
                   />
-                )}
+                </div>
+              )}
 
-                {regDescripcion && (
-                  <div className="mt-4">
-                    <p className="text-gray-500">Descripción:</p>
-                    <p className="text-gray-900">{regDescripcion}</p>
-                  </div>
-                )}
+              {/* {regDescripcion && (
+                <div className="mt-4">
+                  <p className="text-gray-500">Descripción:</p>
+                  <p className="text-gray-900">{regDescripcion}</p>
+                </div>
+              )} */}
 
-                <Button
-                  onClick={() =>
-                    sendData({
-                      serial: regSerial,
-                      code: regCodigo,
-                      name: regNombre,
-                      variable: regVariable,
-                      description: regDescripcion,
-                    }, resetRegisterForm)
-                  }
-                  variant="primary"
-                  size="full"
-                  className="mt-6"
-                >
-                  Registrar Sensor
-                </Button>
-              </motion.div>
-            )}
+              <Button
+                onClick={() =>
+                  sendData({
+                    serial: regSerial,
+                    code: regCodigo,
+                    name: regNombre,
+                    variable: regVariable,
+                    description: regDescripcion,
+                  }, resetRegisterForm)
+                }
+                disabled={isRegisterDisabled}
+                variant="primary"
+                size="full"
+                className="mt-6"
+              >
+                Registrar Sensor
+              </Button>
+            </motion.div>
+          )}
+
 
             {/* FORMULARIO MODIFICAR */}
             {optionForm === "Modificar" && (

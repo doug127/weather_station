@@ -52,7 +52,8 @@ export const register = async (req, res) => {
         return res.status(400).json({ message: 'El nombre de usuario ya existe.' });
     }
 
-    const role_id = 2;
+    const role_user = 3;
+    const role_id = role_user;
 
     const verificationCode = crypto.randomInt(100000, 999999);
     const minutes = 15  * 1000 * 60;
@@ -314,9 +315,23 @@ export const updateUsername = async (req, res) => {
   }
 }
 
-export const getCurrentUser = (req, res) => {
+export const getCurrentUser = async (req, res) => {
   try {
-    res.status(200).json({ user: req.user });
+    const {username} = req.user;
+
+    const user = await User.findOne({ where: { username } });
+    if (!user) {
+      return res.status(404).json({ message: 'El usuario no ha sido encontrado.' });
+    }
+
+    const userData = {
+      email: user.email,
+      username: user.username,
+      role_id: user.role_id,
+      isVerified: user.isVerified
+    }
+
+    res.status(200).json({ user: userData });
   } catch (error) {
     console.error('Error al obtener el usuario actual:', error);
     res.status(500).json({ message: 'Error al obtener el usuario actual', error: error.message });
