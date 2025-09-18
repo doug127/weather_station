@@ -5,6 +5,7 @@
 
 export const up = async (queryInterface, Sequelize) => {
   const rolesData = [
+    {name: 'superadmin'},
     {name: 'admin'},
     {name: 'user'},
   ]

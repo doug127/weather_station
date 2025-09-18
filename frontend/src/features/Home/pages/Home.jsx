@@ -15,7 +15,10 @@ import { SkeletonPage } from '@/shared/components/skeletons/SkeletonPage'
 export const Home = () => {
     const {optionBanner} = useContext(Context);
     const { user, loading } = useContext(AuthContext);
-    const role_admin_id = 1;
+    
+    const ROLE_SUPERADMIN = 1;
+    const ROLE_ADMIN = 2;
+    const ROLET_USER = 3;
     
     if (loading) {
       return <SkeletonPage/>;
@@ -63,7 +66,7 @@ export const Home = () => {
           </motion.div>
         )}
 
-        <RequireRole roles={[role_admin_id]} user={user}>
+        <RequireRole roles={[ROLE_ADMIN, ROLE_SUPERADMIN ]} user={user}>
           {optionBanner === "AddSensor" && (
             <motion.div
               initial={{ x: -100, opacity: 0 }}

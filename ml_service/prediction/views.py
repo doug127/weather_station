@@ -3,12 +3,13 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .models import TrainedModel, PredictModel
 from .serializers import TrainedModelSerializer, PredictModelSerializer
-from .utils import structure_data, structure_data_single_row, train_model, make_prediction, load_latest_model
+from .utils import structure_data, train_model, make_predictions, load_latest_model
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import numpy as np
+import pandas as pd
 import os
 import joblib
-from datetime import datetime, timedelta
+from datetime import datetime
 
 class TrainedModelViewSet(viewsets.ModelViewSet):
     queryset = TrainedModel.objects.all()
@@ -16,13 +17,13 @@ class TrainedModelViewSet(viewsets.ModelViewSet):
 
 class TrainedModelView(APIView):
     def post(self, request):
-        model_name = request.data.get('model_name')
-        json_data = request.data.get('json_data')
-        targets = request.data.get('targets', [])
+        model_name = request.data.get("model_name")
+        json_data = request.data.get("json_data")
+        targets = request.data.get("targets", [])
 
         if not model_name or not json_data or not targets:
             return Response(
-                {'error': 'model_name, json_data y targets son requeridos'},
+                {"error": "model_name, json_data y targets son requeridos"},
                 status=400
             )
 
@@ -31,17 +32,16 @@ class TrainedModelView(APIView):
             models, metrics = train_model(df, targets=targets)
         except Exception as e:
             import traceback
-            print("❌ Error en entrenamiento:")
             traceback.print_exc()
-            return Response({'error': str(e)}, status=400)
+            return Response({"error": str(e)}, status=400)
 
-        # Guardar todos los modelos en un solo archivo
+        # Guardar modelos en un archivo .joblib
         MODEL_DIR = "./storage"
         os.makedirs(MODEL_DIR, exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         file_path = os.path.join(MODEL_DIR, f"{model_name}_{timestamp}.joblib")
-        joblib.dump(models, file_path)  # 👈 ahora guarda varios modelos
+        joblib.dump(models, file_path)
 
         model_instance = TrainedModel.objects.create(
             model_name=model_name,
@@ -51,34 +51,14 @@ class TrainedModelView(APIView):
         )
 
         return Response({
-            'message': 'Trained models saved successfully',
-            'data': TrainedModelSerializer(model_instance).data
+            "message": "Trained models saved successfully",
+            "data": TrainedModelSerializer(model_instance).data
         }, status=201)
 
 
 class PredictModelViewSet(viewsets.ModelViewSet):
     queryset = PredictModel.objects.all()
     serializer_class = PredictModelSerializer
-
-class PredictModelLatestView(APIView):
-    def get(self, request):
-        try:
-            # Última fila en base a la fecha
-            latest = PredictModel.objects.latest("prediction_date")
-
-            # Fecha de predicción -> día siguiente
-            next_day = latest.prediction_date + timedelta(days=1)
-
-            data = {
-                "prediction_date": next_day,
-                "predictions": latest.predictions.get("predictions", {}),  # Solo la sección predictions
-                "input_data": latest.predictions.get("input_data", {})  # Datos de entrada usados
-            }
-
-            return Response(data, status=status.HTTP_200_OK)
-
-        except PredictModel.DoesNotExist:
-            return Response({"error": "No predictions found"}, status=status.HTTP_404_NOT_FOUND)
 
 class PredictModelView(APIView):
     def post(self, request):
@@ -98,36 +78,50 @@ class PredictModelView(APIView):
                     status=400
                 )
 
-            df = structure_data_single_row(data_list)
+            # Crear DataFrame con una fila
+            df = pd.DataFrame(data_list)
 
             # Cargar último modelo
             last_model, models_dict = load_latest_model()
 
-            # Seleccionar target
-            target_name = last_model.target_variables[0]  # por ejemplo el primero
-            model = models_dict[target_name]
-
-            # Generar predicción
-            pred, used_features = make_prediction(model, df)
+            # Generar predicciones para todos los targets
+            predictions = make_predictions(models_dict, df)
 
             # Guardar en la BD
             prediction_instance = PredictModel.objects.create(
                 trained_model=last_model,
                 predictions={
                     "input_data": data_list[0],
-                    "prediction_value": pred
+                    "predictions": predictions
                 }
             )
 
             return Response({
-                "message": "Predicción generada con éxito",
-                "prediction": prediction_instance.predictions,
-                "features_used": used_features,
+                "inputs": data_list[0],
+                "predict_data": predictions,
                 "model_used": last_model.model_name
             }, status=200)
 
         except Exception as e:
             import traceback
             print("❌ Error en predicción:")
+            traceback.print_exc()
+            return Response({"error": str(e)}, status=500)
+
+
+class LatestPredictModelView(APIView):
+    def get(self, request):
+        try:
+            last_prediction = PredictModel.objects.latest("prediction_date")
+            serializer = PredictModelSerializer(last_prediction)
+            return Response(serializer.data, status=200)
+        except PredictModel.DoesNotExist:
+            return Response(
+                {"error": "No hay predicciones disponibles"}, 
+                status=404
+            )
+        except Exception as e:
+            import traceback
+            print("❌ Error al obtener la última predicción:")
             traceback.print_exc()
             return Response({"error": str(e)}, status=500)

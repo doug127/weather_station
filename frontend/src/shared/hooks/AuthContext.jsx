@@ -40,14 +40,38 @@ export const AuthProvider = ({ children }) => {
             setLoading(true);
             setError(null);
 
+            // Login
             await api.post("/auth/login", { identifier, password }, { withCredentials: true });
-
+            
+            // Obtener info del usuario
             const res = await api.get("/auth/me", { withCredentials: true });
-            setUser(res.data.user);
-            localStorage.setItem("user", JSON.stringify(res.data.user));
-            navigate("/Home");            
+            const userData = res.data.user;
+            if (!userData) throw new Error("No se pudo obtener la información del usuario");
+
+            if (!userData.isVerified) {
+                // Guardar email pendiente
+                localStorage.setItem("pendingEmail", userData.email);
+                localStorage.setItem("fromLogin", "true");
+                localStorage.setItem("fromRegister", "false");
+
+                // Enviar código automáticamente al email
+                try {
+                    await api.post("/auth/resend-code", { email: userData.email });
+                    console.log("Código de verificación enviado al correo automáticamente.");
+                } catch (err) {
+                    console.error("Error enviando el código automáticamente:", err);
+                }
+
+                navigate("/verify-email");
+                return;
+            }
+
+            // Usuario verificado: setear sesión
+            setUser(userData);
+            localStorage.setItem("user", JSON.stringify(userData));
+            navigate("/home");
         } catch (err) {
-            setError(err.response?.data?.message || "Error al iniciar sesión");
+            setError(err.response?.data?.message || err.message || "Error al iniciar sesión");
         } finally {
             setLoading(false);
         }
@@ -80,33 +104,66 @@ export const AuthProvider = ({ children }) => {
             console.log("Registro exitoso: ", res);
 
             localStorage.setItem("pendingEmail", email);
+            localStorage.setItem("fromRegister", "true");
 
             navigate("/verify-email");
         } catch (err) {
             console.error("Error registrando usuario:", err);
             alert(err.response?.data?.message || "Error en el registro");
+        } finally {
+            setLoading(false);
         }
     }
 
-    const verifyEmail = async (email, code) => {
+    const verifyEmail = async (email, code, fromRegister = false) => {
         try {
             setLoading(true);
             setError(null);
             const intCode = parseInt(code, 10);
 
-            const res = await api.post("/auth/verify-email", 
-                { 
-                    email, 
-                    code: intCode }
-            );
-            console.log("Verificación de email exitosa: ", res.data);
+            // Verificar el email
+            const verifyRes = await api.post("/auth/verify-email", { email, code: intCode });
+            console.log("Verificación de email exitosa: ", verifyRes.data);
+
+            // Limpiar datos pendientes
             localStorage.removeItem("pendingEmail");
-            navigate("/auth");
+            
+            if (fromRegister) {
+                // Usuario recién registrado: ir a login
+                localStorage.removeItem("fromRegister");
+                navigate("/auth");
+            } else {
+                // Usuario que inició sesión pero no estaba verificado
+                localStorage.removeItem("fromLogin");
+                
+                try {
+                    // Intentar obtener los datos del usuario actualizado
+                    const userRes = await api.get("/auth/me", { withCredentials: true });
+                    const userData = userRes.data.user;
+                    
+                    if (userData) {
+                        setUser(userData);
+                        localStorage.setItem("user", JSON.stringify(userData));
+                        navigate("/home");
+                    } else {
+                        // Si no se puede obtener el usuario, redirigir a login
+                        console.warn("No se pudieron obtener los datos del usuario después de verificar");
+                        navigate("/auth");
+                    }
+                } catch (userError) {
+                    console.error("Error obteniendo datos del usuario después de verificar:", userError);
+                    // Si falla obtener el usuario, redirigir a login para que inicie sesión nuevamente
+                    navigate("/auth");
+                }
+            }
+
         } catch (err) {
-            console.error("Error verificando email:",   err);
-            alert(err.response?.data?.message || "Error en la verificación");
+            console.error("Error verificando email:", err);
+            setError(err.response?.data?.message || "Error en la verificación");
+        } finally {
+            setLoading(false);
         }
-    }
+    };
 
     const resendCode = async (email) => {
         try {

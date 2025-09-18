@@ -17,10 +17,19 @@ export const up = async (queryInterface, Sequelize) => {
       codeExpiresAt: null
     },
     { 
+      email: 'maicol@example.com', 
+      password: 'password123.', 
+      username: 'maicol', 
+      role_id: 2, 
+      isVerified: true, 
+      code: null,
+      codeExpiresAt: null
+    },
+    { 
       email: 'rosangel@example.com', 
       password: 'password123.', 
       username: 'rosangel', 
-      role_id: 2, 
+      role_id: 3, 
       isVerified: true, 
       code: null,
       codeExpiresAt: null

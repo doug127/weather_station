@@ -6,9 +6,10 @@ export const ContextProvider = ({children}) => {
     const [optionBanner, setOptionBanner] = useState(() => {
         return localStorage.getItem('optionBanner') || 'Init';
     });
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
         
     const [currentArticle, setCurrentArticle] = useState(null);
-
+    
     useEffect(() => {
         const saved = localStorage.getItem('optionBanner');
         if (saved) {
@@ -23,7 +24,8 @@ export const ContextProvider = ({children}) => {
     return(
         <Context.Provider value={{
             optionBanner,setOptionBanner,
-            currentArticle, setCurrentArticle
+            currentArticle, setCurrentArticle,
+            isSidebarOpen, setIsSidebarOpen
         }}>
             {children}
         </Context.Provider>

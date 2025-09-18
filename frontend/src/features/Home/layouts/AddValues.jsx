@@ -5,6 +5,7 @@ import { Input } from "../components/forms/inputs/InputValue";
 import { InputTimestamp } from "../components/forms/inputs/InputTimestamp";
 import { useSensors } from "../hooks/addValues/useSensors";
 import { useSendValues } from "../hooks/addValues/useSendValues";
+import { useTrainAndPredict } from "../hooks/addValues/useTrainAndPredict";
 import { useUploadFile } from "../hooks/addValues/useUploadFile";
 import { Button } from "@/shared/components/buttons/Button"
 import { SkeletonPage } from "@/shared/components/skeletons/SkeletonPage";
@@ -16,7 +17,7 @@ export const AddValues = () => {
   const [selectedDate, setSelectedDate] = useState(""); 
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [optionForm, setOptionForm] = useState("Manual"); // 👈 estado para toggle
+  const [optionForm, setOptionForm] = useState("Manual");
 
   const resetForm = () => {
     setFormValues({});
@@ -25,11 +26,22 @@ export const AddValues = () => {
   };
 
   const sensors = useSensors();
+
+  // 👉 flujo original
   const { sendValues } = useSendValues(
     formValues,
     selectedDate,
     selectedTime,
     resetForm,
+    setLoading,
+    sensors
+  );
+
+  // 👉 nuevo flujo entrenar/predicción manual
+  const { trainAndPredict } = useTrainAndPredict(
+    selectedDate,
+    selectedTime,
+    sensors,
     setLoading
   );
 
@@ -37,13 +49,6 @@ export const AddValues = () => {
 
   // 👇 Hook para subir archivo
   const { uploadFile, loading: fileLoading, error: fileError, success: fileSuccess } = useUploadFile();
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      uploadFile(file);
-    }
-  };
 
   if (loading || fileLoading) {
     return <SkeletonPage />;
@@ -102,6 +107,7 @@ export const AddValues = () => {
                   ))}
                 </div>
                 
+                {/* Botón normal */}
                 <Button 
                   onClick={sendValues}
                   size="full" 
@@ -110,45 +116,52 @@ export const AddValues = () => {
                 >
                   Registrar valores
                 </Button>
+
+                {/* Botón adicional con confirmación */}
+                <Button 
+                  onClick={trainAndPredict}
+                  size="full" 
+                  className="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                  disabled={sensors.length === 0}
+                >
+                  Entrenar y generar predicción
+                </Button>
               </motion.div>
             )}
 
             {/* --- FORMULARIO SUBIDA DE ARCHIVO --- */}
             {optionForm === "Archivo" && (
-            <motion.div
+              <motion.div
                 initial={{ x: -100, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ duration: 0.6 }}
                 className="w-full"
-            >
+              >
                 <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Subir valores desde Excel
-                </label>
-                
-                {/* Input para seleccionar archivo */}
-                <input
+                  </label>
+                  
+                  <input
                     type="file"
                     accept=".xlsx, .xls"
-                    onChange={(e) => setSelectedFile(e.target.files[0])} // guardamos el archivo en estado
+                    onChange={(e) => setSelectedFile(e.target.files[0])}
                     className="block w-full text-sm text-gray-900 border border-gray-300 rounded-md cursor-pointer focus:outline-none"
-                />
+                  />
 
-                {/* Mostrar errores o éxito */}
-                {fileError && <p className="text-red-500 text-sm mt-2">{fileError}</p>}
-                {fileSuccess && <p className="text-green-500 text-sm mt-2">{fileSuccess}</p>}
+                  {fileError && <p className="text-red-500 text-sm mt-2">{fileError}</p>}
+                  {fileSuccess && <p className="text-green-500 text-sm mt-2">{fileSuccess}</p>}
 
-                {/* Botón para enviar archivo */}
-                <Button
+                  <Button
                     onClick={() => uploadFile(selectedFile)}
-                    disabled={!selectedFile || fileLoading} // deshabilitar si no hay archivo o está subiendo
+                    disabled={!selectedFile || fileLoading}
                     size="full"
                     className="mt-2"
-                >
+                  >
                     Enviar archivo
-                </Button>
+                  </Button>
                 </div>
-            </motion.div>
+              </motion.div>
             )}
           </div>
         </div>

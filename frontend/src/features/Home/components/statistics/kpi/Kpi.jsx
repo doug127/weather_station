@@ -14,15 +14,14 @@ const formatDate = (dateString) => {
 };
 
 export const KPIs = () => {
-  const [predictions, setPredictions] = useState(null);
-  const AdminRole = 1;
+  const [latestPrediction, setLatestPrediction] = useState(null);
 
   useEffect(() => {
     const fetchPredictions = async () => {
       try {
-        const res = await djangoApi.get("/predict-model/latest/");
-        console.log("Predicciones obtenidas:", res);
-        setPredictions(res.data);
+        const res = await djangoApi.get("/predict-model/latest");
+        console.log("Predicciones obtenidas:", res.data);
+        setLatestPrediction(res.data); // guardamos toda la respuesta
       } catch (err) {
         console.error("Error fetching predictions:", err);
       }
@@ -31,46 +30,41 @@ export const KPIs = () => {
     fetchPredictions();
   }, []);
 
-  if (!predictions) {
+  if (!latestPrediction) {
     return <p className="p-4">Cargando predicciones...</p>;
   }
 
-  const { prediction_date, predictions: predValues, input_data } = predictions;
+  // Extraemos del formato real
+  const { prediction_date, predictions } = latestPrediction;
+  const { input_data, predictions: predicted_data } = predictions;
+
   const formattedDate = formatDate(prediction_date);
 
   return (
     <div className="bg-gray-50 p-6 rounded-lg shadow-md">
       {/* Título */}
       <h3 className="text-lg font-semibold text-gray-700 mb-4">
-        Predicciones del día ({formattedDate})
+        Predicciones del día <span className="text-sm text-gray-400">- {formattedDate}</span>
       </h3>
-
-      {/* <TrainAndPredict user={{ role_id: AdminRole }} /> */}
 
       {/* Contenedor flexible para las Cards */}
       <div className="flex flex-wrap justify-start gap-4">
-        {Object.entries(predValues).map(([key, value]) => {
-          const inputValue = input_data[key];
-          const icon = value >= inputValue ? "fa-chart-line-up" : "fa-chart-line-down";
-
+        {Object.entries(predicted_data).map(([key, predictedValue]) => {
+          const inputValue = input_data[key] ?? null;
+          const icon = "fa-solid fa-cloud-sun";
+            console.log(input_data.wspd)
           return (
-            <div
+            <Card
               key={key}
-              className="flex-1 min-w-[220px] max-w-[32%] bg-white rounded-md shadow-lg p-4 flex items-center gap-4"
-            >
-              {/* Icono */}
-              <div className="flex-shrink-0 text-white bg-gray-900 w-12 h-12 rounded-md flex justify-center items-center text-2xl">
-                <i className={`fa-solid ${icon}`}></i>
-              </div>
-
-              {/* Información */}
-              <div className="flex flex-col">
-                <p className="text-gray-700 font-medium">{key.toUpperCase()}</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {value.toFixed(2)} (input: {inputValue})
-                </p>
-              </div>
-            </div>
+              icon={icon}
+              title={key.toUpperCase()}
+              value={
+                inputValue !== null
+                  ? `${predictedValue.toFixed(2)} ${inputValue}`
+                  : `${predictedValue.toFixed(2)}`
+              }
+              data_testid={input_data.wspd}
+            />
           );
         })}
       </div>
