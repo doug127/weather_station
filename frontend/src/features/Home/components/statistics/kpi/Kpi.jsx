@@ -44,18 +44,15 @@ export const KPIs = () => {
     <div className="bg-gray-50 p-6 rounded-lg shadow-md">
       {/* Título */}
       <h3 className="text-lg font-semibold text-gray-700 mb-4">
-        Predicciones del día ({formattedDate})
+        Predicciones del día <span className="text-sm text-gray-400">- {formattedDate}</span>
       </h3>
 
       {/* Contenedor flexible para las Cards */}
       <div className="flex flex-wrap justify-start gap-4">
         {Object.entries(predicted_data).map(([key, predictedValue]) => {
           const inputValue = input_data[key] ?? null;
-          const icon =
-            inputValue !== null && predictedValue >= inputValue
-              ? "fa-arrow-up"
-              : "fa-arrow-down";
-
+          const icon = "fa-solid fa-cloud-sun";
+            console.log(input_data.wspd)
           return (
             <Card
               key={key}
@@ -63,9 +60,10 @@ export const KPIs = () => {
               title={key.toUpperCase()}
               value={
                 inputValue !== null
-                  ? `Pred: ${predictedValue.toFixed(2)} | Input: ${inputValue}`
-                  : `Pred: ${predictedValue.toFixed(2)}`
+                  ? `${predictedValue.toFixed(2)} ${inputValue}`
+                  : `${predictedValue.toFixed(2)}`
               }
+              data_testid={input_data.wspd}
             />
           );
         })}

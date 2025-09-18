@@ -25,8 +25,6 @@ export const Input = ({ sensor, formValues, setFormValues, errors, setErrors }) 
 
   const validateValue = (id, rawValue) => {
     const { min, max } = sensor.variable;
-
-    // regex: número entero o flotante válido
     const regex = /^-?\d*(\.\d+)?$/;
 
     if (!regex.test(rawValue)) {
@@ -54,14 +52,14 @@ export const Input = ({ sensor, formValues, setFormValues, errors, setErrors }) 
       <label
         className={`absolute left-2 transition-all duration-300 ease-in-out pointer-events-none 
           ${focused[sensor.id] || formValues[sensor.id]
-            ? "-top-3 text-xs p-1 bg-white text-gray-700"
-            : "top-2 text-gray-400"
+            ? "-top-3 text-xs px-1 bg-white text-gray-700 truncate max-w-full md:max-w-[calc(100%-3rem)]"
+            : "top-2 text-gray-400 truncate max-w-full md:max-w-[calc(100%-3rem)]"
           }`}
       >
         {sensor.name} ({sensor.variable.unit})
       </label>
 
-      <div className="flex flex-row">
+      <div className="flex flex-row gap-2">
         <input
           type="text"
           value={formValues[sensor.id] || ""}
@@ -90,8 +88,8 @@ export const Input = ({ sensor, formValues, setFormValues, errors, setErrors }) 
         <button
           type="button"
           onClick={() => toggleEnable(sensor.id)}
-          className={`p-2 border rounded-md transition-colors ${
-            enabledInputs[sensor.id]
+          className={`p-2 border rounded-md transition-colors shrink-0
+            ${enabledInputs[sensor.id]
               ? "bg-green-500 text-white hover:bg-green-600"
               : "bg-gray-200 text-gray-600 hover:bg-gray-300"
           }`}
@@ -100,16 +98,14 @@ export const Input = ({ sensor, formValues, setFormValues, errors, setErrors }) 
         </button>
       </div>
 
-      {/* 🔹 Mostrar min y max debajo */}
       {enabledInputs[sensor.id] && (
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-gray-500 mt-1 truncate">
           Rango permitido: {sensor.variable.min} – {sensor.variable.max} {sensor.variable.unit}
         </p>
       )}
 
-      {/* 🔹 Mostrar error */}
       {errors[sensor.id] && (
-        <p className="text-xs text-red-500 mt-1">{errors[sensor.id]}</p>
+        <p className="text-xs text-red-500 mt-1 truncate">{errors[sensor.id]}</p>
       )}
     </div>
   );

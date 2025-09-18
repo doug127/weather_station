@@ -87,8 +87,8 @@ export const AddSensor = () => {
   if (loading) return <p>Cargando variables...</p>;
 
   return (
-    <div className="w-full min-h-[80vh] flex flex-col items-center">
-      <div className="relative flex flex-col items-center w-1/2 p-10">
+    <div className="lg:w-full md:w-[560px] min-h-[80vh] flex flex-col items-center">
+      <div className="relative flex flex-col items-center lg:w-1/2 p-10 md:w-full">
         {/* ToggleButton fijo */}
         <div className="w-full max-w-2xl flex justify-center mt-10">
           <ToggleButton
@@ -101,7 +101,7 @@ export const AddSensor = () => {
 
         {/* Formulario con margin-top fijo */}
         <div className="mt-24 w-full flex justify-center">
-          <div className="relative p-4 w-[700px] h-auto bg-white shadow-lg border py-7 overflow-hidden rounded-md">
+          <div className="relative p-4 lg:w-[700px] md:w-[560px] sm:w-[300px]  h-auto bg-white shadow-lg border py-7 overflow-hidden rounded-md">
 
             {/* FORMULARIO REGISTRAR */}
             {optionForm === "Registrar" && (
