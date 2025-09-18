@@ -34,7 +34,7 @@ export const ProfitChart = () => {
     /*
     const fetchProfitData = async () => {
       try {
-        const response = await api.get('/value/profit'); // Ajusta tu endpoint real
+        const response = await api.get('/value/profit');
         const data = response.data; 
         const cats = data.map(item => item.month);
         setCategories(cats);
