@@ -1,4 +1,5 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Img } from '@/features/Auth/layouts/Img';
 import { Input } from '@/shared/components/inputs/Input';
@@ -8,18 +9,38 @@ import { useTimer } from '@/shared/hooks/useTimer';
 export const Validation = () => {
     const [code, setCode] = useState("");
     const [focusCode, setFocusCode] = useState(false);
+    const navigate = useNavigate();
 
     const { verifyEmail, resendCode } = useContext(AuthContext);
 
     const email = localStorage.getItem("pendingEmail");
+    const fromRegister = localStorage.getItem("fromRegister") === "true";
+    const fromLogin = localStorage.getItem("fromLogin") === "true";
+
 
     const minutes = 15 * 60; 
 
     const {timeLeft, setTimeLeft, formattedTime} = useTimer(minutes);
 
-    const onSubmitValidation = (e) => {
+    useEffect(() => {
+        if (!email) {
+            navigate("/auth");
+        }
+    }, [email, navigate]);
+
+    const onSubmitValidation = async (e) => {
         e.preventDefault();
-        verifyEmail(email, code);
+        
+        if (!code) {
+            alert("Por favor ingresa el código de verificación");
+            return;
+        }
+
+        try {
+            await verifyEmail(email, code, fromRegister);
+        } catch (err) {
+            console.error("Error en verificación:", err);
+        }
     }
 
     const handleResend = async () => {

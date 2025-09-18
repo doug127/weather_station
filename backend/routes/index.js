@@ -6,6 +6,7 @@ import trainModelRouter from './trainModel.routes.js'
 import reportRouter from './reports.routes.js'
 import authRouter from './auth.routes.js';
 import mapsRouter from './maps.routes.js';
+import userRouter from './user.routes.js';
 
 const routes = express.Router();
 
@@ -15,6 +16,7 @@ routes.use('/auth', authRouter);
 routes.use('/model', trainModelRouter);
 routes.use('/report', reportRouter);
 routes.use('/value', valueRouter);
+routes.use('/user', userRouter);
 routes.use('/chirpsMap', mapsRouter);
 
 export default routes;

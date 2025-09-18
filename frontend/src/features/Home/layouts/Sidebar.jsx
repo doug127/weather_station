@@ -9,7 +9,9 @@ import { Footer } from "./Footer";
 export const Sidebar = () => {
   const { optionBanner, setOptionBanner } = useContext(Context);
   const { user } = useContext(AuthContext);
-  const role_admin_id = 1;
+  const ROLE_SUPERADMIN = 1;
+  const ROLE_ADMIN = 2;
+  const ROLE_USER = 3;
 
   return (
     <div className="flex h-auto bg-gray-100">
@@ -65,7 +67,7 @@ export const Sidebar = () => {
                 <i className="fa-solid fa-table px-5"></i>
                 Tablas
               </li>
-              <RequireRole roles={[role_admin_id]} user={user}>
+              <RequireRole roles={[ROLE_ADMIN, ROLE_SUPERADMIN]} user={user}>
                 <li
                   onClick={() => setOptionBanner("AddSensor")}
                   className={`${
