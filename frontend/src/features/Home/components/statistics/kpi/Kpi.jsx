@@ -18,6 +18,7 @@ export const KPIs = () => {
 
   useEffect(() => {
     const fetchPredictions = async () => {
+      console.log('Haciendo petición a:', 'http://127.0.0.1:8000/api/predict-model/latest');
       try {
         const res = await djangoApi.get("/predict-model/latest");
         console.log("Predicciones obtenidas:", res.data);

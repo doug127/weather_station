@@ -1,4 +1,4 @@
-import {Routes, Route} from 'react-router-dom'
+import {Routes, Route, Navigate} from 'react-router-dom'
 import { Home } from '@/features/Home/pages/Home'
 import { Auth } from '@/features/Auth/pages/Auth'
 import { Validation } from '@/features/Auth/pages/Validation'
@@ -18,6 +18,14 @@ export const App = () => {
 
   return (
     <Routes>
+      {/* Ruta raíz - redirigir según el estado de autenticación */}
+      <Route 
+        path="/" 
+        element={
+          user ? <Navigate to="/home" replace /> : <Navigate to="/auth" replace />
+        } 
+      />
+
       {/* Rutas públicas */}
       <Route
         path="/auth"
@@ -64,6 +72,14 @@ export const App = () => {
         <Route index element={<Home />} />
         <Route path="" element={<Home />} />
       </Route>
+
+      {/* Ruta de fallback para cualquier ruta no encontrada */}
+      <Route 
+        path="*" 
+        element={
+          user ? <Navigate to="/home" replace /> : <Navigate to="/auth" replace />
+        } 
+      />
     </Routes>
   );
 };

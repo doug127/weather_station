@@ -1,0 +1,48 @@
+{
+  "name": "my-desktop-app",
+  "version": "1.0.0",
+  "main": "electron-main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:renderer": "cd frontend && npm run build",
+    "pack": "npm run build:renderer && electron-builder --dir",
+    "dist": "npm run build:renderer && electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^38.1.2",
+    "electron-builder": "^24.0.0"
+  },
+  "build": {
+    "appId": "com.mycompany.myapp",
+    "files": [
+      "frontend/**",
+      "electron-main/**",
+      "backend/**",
+      "ml_service/**",
+      "node_modules/**"
+    ],
+    "extraResources": [
+      {
+        "from": "ml_service/venv",
+        "to": "ml_service/venv",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ]
+    }
+  },
+  "dependencies": {
+    "axios": "^1.12.2"
+  }
+}

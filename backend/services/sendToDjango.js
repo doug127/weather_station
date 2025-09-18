@@ -81,7 +81,7 @@ export const trainModel = async (req, res) => {
 
     // 7️⃣ Enviar request a Django
     const djangoRes = await axios.post(
-      "http://localhost:8000/api/train-model/",
+      "http://127.0.0.1:8000/api/train-model/",
       payload,
       { headers: { "Content-Type": "application/json" } }
     );
@@ -135,7 +135,7 @@ export const predictWeather = async (req, res) => {
 
     // 2️⃣ Enviar al endpoint de Django
     const djangoRes = await axios.post(
-      "http://localhost:8000/api/predict-model/",
+      "http://127.0.0.1:8000/api/predict-model/",
       payload,
       { headers: { "Content-Type": "application/json" } }
     );
@@ -246,7 +246,7 @@ export const trainAndPredictFromDb = async (req, res) => {
     let djangoTrainResponse = null;
     try {
       djangoTrainResponse = await axios.post(
-        "http://localhost:8000/api/train-model/",
+        "http://127.0.0.1:8000/api/train-model/",
         trainPayload,
         { headers: { "Content-Type": "application/json" } }
       );
@@ -276,7 +276,7 @@ export const trainAndPredictFromDb = async (req, res) => {
     let djangoPredictResponse = null;
     try {
       const pdRes = await axios.post(
-        "http://localhost:8000/api/predict-model/",
+        "http://127.0.0.1:8000/api/predict-model/",
         predictPayload,
         { headers: { "Content-Type": "application/json" } }
       );
