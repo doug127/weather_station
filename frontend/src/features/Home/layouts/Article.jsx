@@ -26,7 +26,8 @@ export const Article = () => {
     };
 
     return (
-        <div id="accordion-flush" className="divide-y divide-gray-300 dark:divide-gray-400 px-5 h-[80vh]">
+        <div className="min-h-[80vh]">
+            <div id="accordion-flush" className="divide-y divide-gray-300 dark:divide-gray-400 px-5 h-auto shadow-md bg-white rounded-md py-6">
             {sensors.map((sensor, index) => (
             <div key={sensor.id}>
                 <h2 id={`accordion-flush-heading-${index}`}>
@@ -58,6 +59,7 @@ export const Article = () => {
                 </div>
             </div>
             ))}
+        </div>
         </div>
     );
 }

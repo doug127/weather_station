@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useSensorsData } from "@/features/Home/hooks/table/useSensorData";
 import { useExportExcel } from "@/features/Home/hooks/table/useExportExcel";
 import { ButtonPagination, Button } from "@/shared/components/buttons/Button";
@@ -31,18 +31,19 @@ export const Table = () => {
 
   return (
     <div className="w-full p-5 flex space-x-5">
-      <div className="relative overflow-x-auto shadow-lg sm:rounded-lg p-4 bg-white border border-gray-200 w-full">
+      <div className="relative overflow-x-auto shadow-lg sm:rounded-lg p-4 bg-white border border-gray-200 lg:w-full md:w-[560px] ">
         {/* Filtros */}
         <div className="w-full p-4 flex justify-between">
           <div className="space-x-2 flex">
             <InputDate dateRange={dateRange} setDateRange={setDateRange} id="date-start" />
             <InputDate dateRange={dateRange} setDateRange={setDateRange} id="date-end" />
           </div>
-          <Button
+          <button
             onClick={handleExport}
+            className="bg-gray-800 text-white p-2 h-10 mt-2 rounded-md "
           >
             Exportar Excel
-          </Button>
+          </button>
         </div>
 
         {/* Tabla */}

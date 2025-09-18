@@ -53,11 +53,11 @@ export const generateExcelReport = async (req, res) => {
 
     // ✅ Insertar filas
     Object.keys(dateMap)
-      .sort((a, b) => new Date(a) - new Date(b)) // ordenar fechas ASC
+      .sort((a, b) => new Date(a) - new Date(b))
       .forEach((date) => {
-        const row = { date };
+        const row = { datetime: date }; // ahora coincide con la columna
         sensorCodes.forEach((code) => {
-          row[code] = dateMap[date][code] ?? "-"; // si no hay valor → "-"
+          row[code] = dateMap[date][code] ?? "-";
         });
         worksheet.addRow(row);
       });

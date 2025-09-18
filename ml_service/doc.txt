@@ -17,3 +17,17 @@ python manage.py migrate
 
 Ejecuta el servicio 
 python manage.py runserver
+
+
+
+
+TimescaleDB
+
+C:\Program Files\PostgreSQL\16\data
+
+reiniciar servicio postgres
+
+sql shell
+
+CREATE EXTENSION IF NOT EXISTS timescaledb;
+\dx

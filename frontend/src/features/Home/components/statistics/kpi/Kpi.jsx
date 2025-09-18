@@ -35,7 +35,6 @@ export const KPIs = () => {
     return <p className="p-4">Cargando predicciones...</p>;
   }
 
-  // Extraemos del formato real
   const { prediction_date, predictions } = latestPrediction;
   const { input_data, predictions: predicted_data } = predictions;
 
@@ -43,30 +42,22 @@ export const KPIs = () => {
 
   return (
     <div className="bg-gray-50 p-6 rounded-lg shadow-md">
-      {/* Título */}
       <h3 className="text-lg font-semibold text-gray-700 mb-4">
-        Predicciones del día ({formattedDate})
+        Predicciones del día <span className="text-sm text-gray-400">- {formattedDate}</span>
       </h3>
 
-      {/* Contenedor flexible para las Cards */}
       <div className="flex flex-wrap justify-start gap-4">
         {Object.entries(predicted_data).map(([key, predictedValue]) => {
           const inputValue = input_data[key] ?? null;
-          const icon =
-            inputValue !== null && predictedValue >= inputValue
-              ? "fa-arrow-up"
-              : "fa-arrow-down";
+          const icon = "fa-solid fa-cloud-sun";
 
           return (
             <Card
               key={key}
               icon={icon}
               title={key.toUpperCase()}
-              value={
-                inputValue !== null
-                  ? `Pred: ${predictedValue.toFixed(2)} | Input: ${inputValue}`
-                  : `Pred: ${predictedValue.toFixed(2)}`
-              }
+              value={predictedValue.toFixed(2)}
+              inputValue={inputValue}
             />
           );
         })}
