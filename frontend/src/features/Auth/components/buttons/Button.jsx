@@ -1,10 +1,6 @@
 import {motion} from "framer-motion";
 
-<<<<<<< HEAD
-export const ToggleButton = ({option, setOption}) => {
-=======
 export const ToggleButton = ({option, setOption, leftOption, rightOption}) => {
->>>>>>> ms
 
 
     return (
@@ -14,26 +10,6 @@ export const ToggleButton = ({option, setOption, leftOption, rightOption}) => {
             transition={{ type: "spring", stiffness: 100, damping: 20 }}
             className="absolute top-1 bottom-1 w-1/2 bg-gray-900 rounded-full"
             style={{
-<<<<<<< HEAD
-                left: option === "Login" ? "0.25rem" : "calc(50% - 0.25rem)",
-            }}
-            />
-            <button
-            onClick={() => setOption("Login")}
-            className={`relative z-10 w-1/2 text-center py-2 font-medium ${
-                option === "Login" ? "text-white" : "text-gray-600"
-            }`}
-            >
-            Login
-            </button>
-            <button
-            onClick={() => setOption("Register")}
-            className={`relative z-10 w-1/2 text-center py-2 font-medium ${
-                option === "Register" ? "text-white" : "text-gray-600"
-            }`}
-            >
-            Register
-=======
                 left: option === `${leftOption}` ? "0.25rem" : "calc(50% - 0.25rem)",
             }}
             />
@@ -52,7 +28,6 @@ export const ToggleButton = ({option, setOption, leftOption, rightOption}) => {
             }`}
             >
             {rightOption}
->>>>>>> ms
             </button>
         </div>
     );

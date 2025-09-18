@@ -120,13 +120,6 @@ export const trainModel = async (req, res) => {
     });
   }
 };
-<<<<<<< HEAD
-
-
-
-
-=======
->>>>>>> ms
 
 export const predictWeather = async (req, res) => {
   try {

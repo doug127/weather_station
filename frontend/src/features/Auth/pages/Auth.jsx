@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import { useContext, useState, useEffect } from "react";
-=======
-import { useContext, useState } from "react";
->>>>>>> ms
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "@/shared/hooks/AuthContext";
 import { motion } from "framer-motion";
@@ -11,6 +7,7 @@ import { Input } from "@/shared/components/inputs/Input";
 import { ToggleButton } from "../components/buttons/Button";
 import { Button } from "@/shared/components/buttons/Button";
 import { SkeletonPage } from "@/shared/components/skeletons/SkeletonPage";
+import { api } from "@/shared/api/apiRoutes";
 
 export const Auth = () => {
   const [showSkeleton, setShowSkeleton] = useState(true);
@@ -25,9 +22,35 @@ export const Auth = () => {
   const [username, setUsername] = useState("");
   const [focusConfirmPassword, setFocusConfirmPassword] = useState(false);
   const [passwordConfirm, setConfirmPassword] = useState("");
+  const [role, setRole] = useState("user"); // Para registro de roles
 
-  const { login, loading, error, register } = useContext(AuthContext);
+  const { user, setUser, login, register, loading, error } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  // 👇 Verificar sesión al montar
+  useEffect(() => {
+    const checkSession = async () => {
+      setShowSkeleton(true); // bloqueamos la UI mientras verificamos
+      try {
+        const res = await api.get("/auth/me", { withCredentials: true });
+        if (res.data.user) {
+          setUser(res.data.user);
+
+          // Si NO es admin, redirigir inmediatamente
+          if (res.data.user.role_id !== "admin") {
+            navigate("/Home", { replace: true });
+            return; // ⚠️ importante detener ejecución
+          }
+        }
+      } catch (err) {
+        console.log("No hay sesión activa");
+      } finally {
+        setShowSkeleton(false);
+      }
+    };
+    checkSession();
+  }, [navigate, setUser]);
+
 
   const onSubmitLogin = (e) => {
     e.preventDefault();
@@ -36,32 +59,31 @@ export const Auth = () => {
 
   const onSubmitRegister = (e) => {
     e.preventDefault();
-    register(username, email, password, passwordConfirm);
+    register(username, email, password, passwordConfirm, role);
+  };
+
+  if (loading || showSkeleton) {
+    return <SkeletonPage />;
   }
 
-  if(loading){
-    return <SkeletonPage/>;
-  }
 
   return (
     <div className="flex h-screen w-screen">
       {/* Left - Form */}
       <div className="relative flex flex-col justify-center items-center w-1/2 p-10">
-<<<<<<< HEAD
+
         <ToggleButton option={optionForm} setOption={setOptionForm} />
 
-        {/* Login Form */}
-        <div className="mt-24 w-full flex justify-center">
-=======
+        {/* Login/Register Toggle */}
         <ToggleButton 
-        option={optionForm} 
-        setOption={setOptionForm} 
-        leftOption="Login" 
-        rightOption="Register" />
+          option={optionForm} 
+          setOption={setOptionForm} 
+          leftOption="Login" 
+          rightOption="Register" 
+        />
 
-        {/* Login Form */}
-        <div className=" w-full flex justify-center">
->>>>>>> ms
+        <div className="w-full flex justify-center">
+          {/* Login Form */}
           {optionForm === "Login" && (
             <motion.div
               initial={{ x: 100, opacity: 0 }}
@@ -69,7 +91,6 @@ export const Auth = () => {
               transition={{ duration: 0.6, ease: "easeInOut" }}
               className="w-full max-w-sm space-y-4"
             >
-              {/* Username */}
               <Input
                 label="Correo o Nombre de Usuario"
                 value={identifier}
@@ -79,8 +100,6 @@ export const Auth = () => {
                 type="text"
                 validationType="identifier"
               />
-
-              {/* Password */}
               <Input
                 label="Password"
                 value={password}
@@ -90,21 +109,20 @@ export const Auth = () => {
                 type="password"
               />
               <Button
-                type = "sumbit"
-                onClick = {onSubmitLogin}
-                variant = "primary"
-                size = "full"
+                type="submit"
+                onClick={onSubmitLogin}
+                variant="primary"
+                size="full"
               >
                 Iniciar Sesión
               </Button>
               <Button
-                onClick= {() => navigate("/forgot-password")}
-                variant = "none"
-                size = "none"
+                onClick={() => navigate("/forgot-password")}
+                variant="none"
+                size="none"
               >
                 ¿Olvidaste tu contraseña?
               </Button>
-              
             </motion.div>
           )}
 
@@ -125,7 +143,6 @@ export const Auth = () => {
                 type="text"
                 validationType="username"
               />
-
               <Input
                 label="Email"
                 value={email}
@@ -135,7 +152,6 @@ export const Auth = () => {
                 type="email"
                 validationType="email"
               />
-
               <Input
                 label="Password"
                 value={password}
@@ -145,7 +161,6 @@ export const Auth = () => {
                 type="password"
                 validationType="password"
               />
-
               <Input
                 label="Confirm Password"
                 value={passwordConfirm}
@@ -156,15 +171,26 @@ export const Auth = () => {
                 validationType="passwordConfirm"
                 compareWith={password}
               />
-              
+
+              {/* 👇 Solo se muestra si hay un admin logueado */}
+              {user?.role_id === "admin" && (
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="w-full p-2 border rounded"
+                >
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
+              )}
+
               <Button
-                type = "submit"
-                onClick = {onSubmitRegister}
-                size = "full"
+                type="submit"
+                onClick={onSubmitRegister}
+                size="full"
               >
                 Register  
-              </Button> 
-
+              </Button>
             </motion.div>
           )}
         </div>
@@ -174,4 +200,4 @@ export const Auth = () => {
       <Img />
     </div>
   );
-}
+};

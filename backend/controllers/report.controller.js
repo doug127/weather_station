@@ -19,14 +19,6 @@ export const generateExcelReport = async (req, res) => {
     // ✅ códigos de sensores únicos
     const sensorCodes = [...new Set(data.map((item) => item.code))];
 
-<<<<<<< HEAD
-    // ✅ Pivotear por fecha (YYYY-MM-DD) y sensor
-    const dateMap = {};
-    data.forEach((item) => {
-      item.values.forEach((v) => {
-        // convertir timestamp → fecha normalizada
-        const date = new Date(v.timestamp).toISOString().split("T")[0];
-=======
     const dateMap = {};
     data.forEach((item) => {
       item.values.forEach((v) => {
@@ -44,7 +36,6 @@ export const generateExcelReport = async (req, res) => {
           String(d.getMinutes()).padStart(2, "0") +
           ":" +
           String(d.getSeconds()).padStart(2, "0");
->>>>>>> ms
 
         if (!dateMap[date]) {
           dateMap[date] = {};
@@ -55,11 +46,7 @@ export const generateExcelReport = async (req, res) => {
 
     // ✅ Definir columnas: Fecha + códigos sensores
     const columns = [
-<<<<<<< HEAD
-      { header: "Fecha", key: "date", width: 15 },
-=======
       { header: "datetime", key: "datetime", width: 15 },
->>>>>>> ms
       ...sensorCodes.map((code) => ({ header: code, key: code, width: 15 })),
     ];
     worksheet.columns = columns;

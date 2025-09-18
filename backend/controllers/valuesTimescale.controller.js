@@ -223,9 +223,6 @@ export const createValue = async (req, res) => {
       });
 
       if (existingValue) {
-<<<<<<< HEAD
-        skippedValues.push({ ...entry, reason: 'Valor duplicado para este momento y fechae' });
-=======
         skippedValues.push({ ...entry, reason: 'Valor duplicado para este momento y fecha' });
         hasDuplicates = true;
         continue;
@@ -246,7 +243,6 @@ export const createValue = async (req, res) => {
 
       if (value < min || value > max) {
         skippedValues.push({ ...entry, reason: `Valor fuera de rango (${min} - ${max})` });
->>>>>>> ms
         hasDuplicates = true;
         continue;
       }
@@ -255,11 +251,7 @@ export const createValue = async (req, res) => {
     if (hasDuplicates && skippedValues.length > 0) {
       await transaction.rollback();
       return res.status(400).json({
-<<<<<<< HEAD
-        message: 'Valor duplicado encontrado.',
-=======
         message: 'Algunos valores fueron rechazados.',
->>>>>>> ms
         skippedValues
       });
     }

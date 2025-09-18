@@ -1,37 +1,21 @@
 import { useState } from "react";
 import { Check, X } from "lucide-react";
 
-<<<<<<< HEAD
-export const Input = ({ sensor, formValues, setFormValues }) => {
-=======
 export const Input = ({ sensor, formValues, setFormValues, errors, setErrors }) => {
->>>>>>> ms
   const [focused, setFocused] = useState({});
   const [enabledInputs, setEnabledInputs] = useState({});
 
   const toggleEnable = (id) => {
     setEnabledInputs((prev) => ({
       ...prev,
-<<<<<<< HEAD
-      [id]: !prev[id], // alterna entre habilitado/deshabilitado
-    }));
-
-    // si lo desactivamos, borramos su valor
-=======
       [id]: !prev[id],
     }));
 
->>>>>>> ms
     if (enabledInputs[sensor.id]) {
       setFormValues((prev) => ({
         ...prev,
         [sensor.id]: "",
       }));
-<<<<<<< HEAD
-    }
-  };
-
-=======
       setErrors((prev) => ({
         ...prev,
         [sensor.id]: null,
@@ -65,7 +49,6 @@ export const Input = ({ sensor, formValues, setFormValues, errors, setErrors }) 
     return true;
   };
 
->>>>>>> ms
   return (
     <div className="w-full relative" key={sensor.id}>
       <label
@@ -75,11 +58,7 @@ export const Input = ({ sensor, formValues, setFormValues, errors, setErrors }) 
             : "top-2 text-gray-400"
           }`}
       >
-<<<<<<< HEAD
-        {sensor.name}
-=======
         {sensor.name} ({sensor.variable.unit})
->>>>>>> ms
       </label>
 
       <div className="flex flex-row">
@@ -92,19 +71,6 @@ export const Input = ({ sensor, formValues, setFormValues, errors, setErrors }) 
           onBlur={() =>
             setFocused((prev) => ({ ...prev, [sensor.id]: false }))
           }
-<<<<<<< HEAD
-          onChange={(e) =>
-            setFormValues({
-              ...formValues,
-              [sensor.id]: e.target.value,
-            })
-          }
-          disabled={!enabledInputs[sensor.id]} // ✅ ahora sí queda deshabilitado
-          className={`w-full p-2 outline-none rounded-md border 
-            ${focused[sensor.id] || formValues[sensor.id]
-              ? "border-gray-900"
-              : "border-gray-200"}
-=======
           onChange={(e) => {
             const val = e.target.value;
             setFormValues({ ...formValues, [sensor.id]: val });
@@ -117,7 +83,6 @@ export const Input = ({ sensor, formValues, setFormValues, errors, setErrors }) 
               : focused[sensor.id] || formValues[sensor.id]
                 ? "border-gray-900"
                 : "border-gray-200"}
->>>>>>> ms
             ${!enabledInputs[sensor.id]
               ? "bg-gray-100 text-gray-400 cursor-not-allowed"
               : ""}`}
@@ -125,24 +90,15 @@ export const Input = ({ sensor, formValues, setFormValues, errors, setErrors }) 
         <button
           type="button"
           onClick={() => toggleEnable(sensor.id)}
-<<<<<<< HEAD
-          className={`p-2 border rounded-md transition-colors ${enabledInputs[sensor.id]
-            ? "bg-green-500 text-white hover:bg-green-600"
-            : "bg-gray-200 text-gray-600 hover:bg-gray-300"
-            }`}
-=======
           className={`p-2 border rounded-md transition-colors ${
             enabledInputs[sensor.id]
               ? "bg-green-500 text-white hover:bg-green-600"
               : "bg-gray-200 text-gray-600 hover:bg-gray-300"
           }`}
->>>>>>> ms
         >
           {enabledInputs[sensor.id] ? <Check size={18} /> : <X size={18} />}
         </button>
       </div>
-<<<<<<< HEAD
-=======
 
       {/* 🔹 Mostrar min y max debajo */}
       {enabledInputs[sensor.id] && (
@@ -155,7 +111,6 @@ export const Input = ({ sensor, formValues, setFormValues, errors, setErrors }) 
       {errors[sensor.id] && (
         <p className="text-xs text-red-500 mt-1">{errors[sensor.id]}</p>
       )}
->>>>>>> ms
     </div>
   );
 };

@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import { User } from '../models/User.js';
 import { sendVerificationEmail } from '../utils/sendEmail.js';
 
-const JWT_SECRET = process.env.JWT_SECRET;
+// const JWT_SECRET = process.env.JWT_SECRET;
 
 export const register = async (req, res) => {
   try {
@@ -170,14 +170,14 @@ export const login = async (req, res) => {
       username: user.username,
       role_id: user.role_id
     }, 
-    JWT_SECRET, 
+    process.env.JWT_SECRET, 
     { expiresIn: '1h' });
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 15 * 60 * 1000 // 15 minutes
+      secure: false, // falso en desarrollo
+      sameSite: 'lax', // permite enviar cookie cross-origin en desarrollo
+      maxAge: 15 * 60 * 1000
     });
 
     res.status(200).json({ message: 'Sesión iniciada correctamente.' });

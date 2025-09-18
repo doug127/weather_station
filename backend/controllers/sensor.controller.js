@@ -117,9 +117,6 @@ export const generateDescriptionSensor = async (req, res) => {
 
         const description = await generateDescription(name, variableData.name, variableData.unit);
 
-<<<<<<< HEAD
-        res.status(200).json({ description });
-=======
         const isSuccess = description && description.split(" ").length > 30; 
         
         if (isSuccess) {
@@ -136,7 +133,6 @@ export const generateDescriptionSensor = async (req, res) => {
                 suggestion: "Corrija el nombre del sensor o la variable antes de continuar."
             });
         }
->>>>>>> ms
     } catch (error) {
         res.status(500).json({ message: "Error generando descripción", error: error.message });
     }
@@ -194,28 +190,18 @@ export const create = async (req, res) => {
 export const update = async (req, res) => {
     try {
         const { id } = req.params;
-<<<<<<< HEAD
-        const { name, code, description, variableId} = req.body;
-=======
         const { nombre, codigo, descripcion, variable, serial } = req.body;
->>>>>>> ms
 
         const sensor = await Sensor.findByPk(id);
         if (!sensor) {
             return res.status(404).json({ message: 'Sensor no encontrado.' });
         }
 
-<<<<<<< HEAD
-        if (variableId) {
-            const variable = await Variable.findByPk(variableId);
-            if (!variable) {
-=======
         // Si se envía "variable" como nombre, buscamos el ID en la tabla Variable
         let variableId = sensor.variableId;
         if (variable) {
             const variableDb = await Variable.findOne({ where: { name: variable } });
             if (!variableDb) {
->>>>>>> ms
                 return res.status(404).json({ message: 'Variable no encontrada.' });
             }
             variableId = variableDb.id;
@@ -224,13 +210,8 @@ export const update = async (req, res) => {
         sensor.name = nombre || sensor.name;
         sensor.code = codigo || sensor.code;
         sensor.serial = serial || sensor.serial;
-<<<<<<< HEAD
-        sensor.description = description || sensor.description;
-        sensor.variableId = variableId || sensor.variableId;
-=======
         sensor.description = descripcion || sensor.description;
         sensor.variableId = variableId;
->>>>>>> ms
 
         await sensor.save();
 
