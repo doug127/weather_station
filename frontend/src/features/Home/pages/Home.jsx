@@ -14,15 +14,12 @@ import { SkeletonPage } from '@/shared/components/skeletons/SkeletonPage'
 
 export const Home = () => {
     const {optionBanner} = useContext(Context);
-    const { user, loading } = useContext(AuthContext);
+    const { user } = useContext(AuthContext);
     
     const ROLE_SUPERADMIN = 1;
     const ROLE_ADMIN = 2;
     const ROLET_USER = 3;
-    
-    if (loading) {
-      return <SkeletonPage/>;
-    }
+
 
     return(
         <div className="p-6">

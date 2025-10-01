@@ -95,7 +95,7 @@ export const User = () => {
   };
 
   return (
-    <div className="landing flex flex-col items-center min-h-screen p-4 space-y-6">
+    <div className="landing flex flex-col items-center min-h-[75vh] p-4 space-y-6">
       <h1 className="text-2xl font-bold">Opciones de Usuario</h1>
       
       {/* Accordion - Cambiar Username */}

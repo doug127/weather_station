@@ -26,6 +26,7 @@ export const InputTimestamp = ({
                 type="date"
                 value={value}
                 onChange={onChange}
+                max={new Date().toISOString().split("T")[0]}
                 />
             )}
         </div>

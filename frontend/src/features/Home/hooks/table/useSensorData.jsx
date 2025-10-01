@@ -29,7 +29,7 @@ export const useSensorsData = (dateRange) => {
           dateRange.max || today.toISOString().split("T")[0];
 
         const params = {
-          sensors: sensorNames.join(","),
+          sensors: sensorNames,
           startDate: startDateDefault,
           endDate: endDateDefault,
           sort: "ASC",
@@ -43,7 +43,14 @@ export const useSensorsData = (dateRange) => {
         const pivot = {};
         sensorsData.forEach((sensor) => {
           sensor.values.forEach(({ timestamp, value }) => {
-            const date = timestamp.split("T")[0];
+            // Formato: YYYY-MM-DD HH:MM
+            const d = new Date(timestamp);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const hours = String(d.getHours()).padStart(2, '0');
+            const minutes = String(d.getMinutes()).padStart(2, '0');
+            const date = `${year}-${month}-${day} ${hours}:${minutes}`;
             if (!pivot[date]) pivot[date] = { date };
             pivot[date][sensor.code] = value;
           });

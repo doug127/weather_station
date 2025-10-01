@@ -172,13 +172,13 @@ export const login = async (req, res) => {
       role_id: user.role_id
     }, 
     process.env.JWT_SECRET, 
-    { expiresIn: '1h' });
+    { expiresIn: '30d' });
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure: false, // falso en desarrollo
-      sameSite: 'lax', // permite enviar cookie cross-origin en desarrollo
-      maxAge: 15 * 60 * 1000
+      secure: true, // falso en desarrollo
+      sameSite: 'none', // permite enviar cookie cross-origin en desarrollo
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 días
     });
 
     res.status(200).json({ message: 'Sesión iniciada correctamente.' });

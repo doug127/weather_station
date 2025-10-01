@@ -1,15 +1,9 @@
 export const SkeletonPage = () => {
     return (
-        <div className="flex items-center justify-center h-screen w-screen bg-white dark:bg-gray-200">
-            <div role="status" className="w-3/4 max-w-lg animate-pulse space-y-4">
-                <div className="h-6 bg-gray-200 rounded-full dark:bg-gray-700 w-1/2 mx-auto"></div>
-                <div className="h-4 bg-gray-200 rounded-full dark:bg-gray-700 w-3/4 mx-auto"></div>
-                <div className="h-4 bg-gray-200 rounded-full dark:bg-gray-700 w-full"></div>
-                <div className="h-4 bg-gray-200 rounded-full dark:bg-gray-700 w-2/3 mx-auto"></div>
-                <div className="h-4 bg-gray-200 rounded-full dark:bg-gray-700 w-1/2 mx-auto"></div>
-                <div className="h-4 bg-gray-200 rounded-full dark:bg-gray-700 w-3/4 mx-auto"></div>
-                <span className="sr-only">Loading...</span>
-            </div>
+        <div className="w-full h-[75vh] flex justify-center items-center gap-x-2 bg-white rounded-md shadow-md">
+            <div className="w-4 h-4 rounded-full bg-blue-700 animate-bounce"></div>
+            <div className="w-4 h-4 rounded-full bg-blue-700 animate-bounce [animation-delay:-.3s]"></div>
+            <div className="w-4 h-4 rounded-full bg-blue-700 animate-bounce [animation-delay:-.5s]"></div>
         </div>
     );
 }

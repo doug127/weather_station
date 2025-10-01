@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-export const InputDate = ({ dateRange, setDateRange, id }) => {
+export const InputDate = ({ dateRange, setDateRange, id, className="" }) => {
   const isStart = id === "date-start";
   const value = isStart ? dateRange.min : dateRange.max;
   const labelText = isStart ? "Fecha de inicio" : "Fecha fin";
@@ -16,7 +16,7 @@ export const InputDate = ({ dateRange, setDateRange, id }) => {
   };
 
   return (
-    <div className="relative w-56">
+    <div className="relative w-52">
       {/* Input */}
       <input
         ref={inputRef}
@@ -29,13 +29,13 @@ export const InputDate = ({ dateRange, setDateRange, id }) => {
             [isStart ? "min" : "max"]: e.target.value,
           })
         }
-        className="peer block w-full rounded-md border border-gray-300 bg-transparent pr-10 pl-3 pt-5 pb-2 text-sm text-gray-900
+        className={`peer block w-full rounded-md border border-gray-300 bg-transparent pr-6 pl-3 pt-5 pb-2 text-sm text-gray-900
           focus:border-blue-500 focus:ring-1 focus:ring-blue-500
           appearance-none
           [&::-webkit-calendar-picker-indicator]:hidden 
           [&::-webkit-inner-spin-button]:hidden 
           [&::-webkit-clear-button]:hidden
-          cursor-pointer"
+          cursor-pointer ${className}`}
         placeholder=" "
         {...(isStart
           ? { max: dateRange.max || undefined }

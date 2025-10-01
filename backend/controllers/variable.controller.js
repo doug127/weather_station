@@ -118,7 +118,7 @@ export const update = async (req, res) => {
     }
 };
 
-export const destory = async (req, res) => {
+export const destroy = async (req, res) => {
     try {
         const variable = await Variable.findByPk(req.params.id);
 

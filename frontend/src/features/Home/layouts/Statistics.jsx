@@ -5,7 +5,7 @@ import { MultiChart } from "../components/statistics/charts/MultiChart";
 import { KPIs } from "../components/statistics/kpi/Kpi";
 
 export const Statistics = () => {
-  const dateLastYear = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
+  const dateLastYear = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000)
   .toISOString()
   .slice(0, 10);
   const sensorPrcpChart = "Pluviómetro";

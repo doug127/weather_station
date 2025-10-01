@@ -18,12 +18,18 @@ export const verifyToken = (req, res, next) => {
     }
 }
 
-export const authorizeRoles = (roles) => {
+export const authorizeRoles = (minRoleId) => {
     return (req, res, next) => {
-        console.log('User roles:', req.user.role_id);
-        if (!req.user || !roles.includes(req.user.role_id)) {
-            return res.status(403).json({ message: 'Access denegado.' });
+        
+        if(!req.user) {
+            return res.status(401).json({ message: 'Usuario no autenticado.' });
         }
+
+        const userRoleId = req.user.role_id;
+        if (userRoleId > minRoleId) {
+            return res.status(403).json({ message: 'Acceso denegado. No tienes los permisos necesarios.' });
+        }
+        
         next();
     };
 }

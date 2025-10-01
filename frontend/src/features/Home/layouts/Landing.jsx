@@ -1,3 +1,6 @@
+import { useEffect, useState } from "react";
+import { SkeletonPage } from "@/shared/components/skeletons/SkeletonPage";
+
 export const Landing = () => {
     return (
         <div className="landing flex flex-col items-center min-h-screen p-4 py-8 bg-white border rounded-md shadow-md">

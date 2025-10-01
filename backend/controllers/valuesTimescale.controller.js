@@ -4,6 +4,77 @@ import { getWeatherData } from '../services/meteostat.js';
 import {sequelize} from '../server/db.js'; 
 import { Op} from 'sequelize';
 
+export const getValuesByTimestamp = async (req, res) => {
+  try {
+    let { timestamp } = req.query;
+
+    if (!timestamp) {
+      return res.status(400).json({ message: "El parámetro 'timestamp' es requerido" });
+    }
+
+    console.log("📥 Timestamp recibido:", timestamp);
+    
+    // El timestamp viene en formato: "YYYY-MM-DD HH:mm:ss±HH"
+    // Ejemplo: "2025-09-01 02:00:00-04"
+    
+    // Parsear el timestamp manualmente
+    let dateTimeStr, timezoneStr;
+    
+    // Buscar el offset de zona horaria (+ o -)
+    const tzMatch = timestamp.match(/([+-]\d{2}(?::\d{2})?)$/);
+    
+    if (tzMatch) {
+      timezoneStr = tzMatch[1]; // Ej: "-04" o "+05:30"
+      dateTimeStr = timestamp.slice(0, -timezoneStr.length).trim(); // "YYYY-MM-DD HH:mm:ss"
+    } else {
+      dateTimeStr = timestamp.trim();
+      timezoneStr = '+00'; // UTC por defecto
+    }
+
+    console.log("📅 Fecha/Hora:", dateTimeStr);
+    console.log("🌍 Timezone:", timezoneStr);
+
+    // Convertir a formato ISO que PostgreSQL entiende
+    const isoTimestamp = `${dateTimeStr}${timezoneStr}`;
+    
+    console.log("🔄 ISO Timestamp para búsqueda:", isoTimestamp);
+
+    // Buscar valores con ese timestamp exacto
+    const values = await ValuesTimescaled.findAll({
+      where: { 
+        timestamp: isoTimestamp
+      },
+      include: [
+        { model: Sensor, attributes: ["id", "code", "name"] },
+      ],
+    });
+
+    console.log(`✅ Encontrados ${values.length} registros`);
+
+    const formatted = values.map(v => ({
+      sensor_id: v.Sensor.id,
+      sensor_name: v.Sensor.name,
+      code: v.Sensor.code,
+      value: v.value,
+      timestamp: v.timestamp
+    }));
+
+    res.json({ 
+      requestedTimestamp: timestamp,
+      parsedTimestamp: isoTimestamp,
+      values: formatted,
+      isExisting: values.length > 0
+    });
+
+  } catch (error) {
+    console.error("❌ Error en getValuesByTimestamp:", error);
+    res.status(500).json({ 
+      message: "Error obteniendo datos por timestamp", 
+      error: error.message 
+    });
+  }
+};
+
 export const insertMeteostatData = async (req, res) => {
     try {
         const { station, start, end } = req.query;
@@ -414,5 +485,37 @@ export const uploadValues = async (req, res) => {
     await transaction.rollback();
     console.error("Error uploadValues:", error);
     return res.status(400).json({ message: error.message });
+  }
+};
+
+export const updateValue = async (req, res) => {
+  try {
+    const { timestamp, code, value } = req.body;
+
+    // Validar datos
+    if (!timestamp || !code || value === undefined) {
+      return res.status(400).json({ message: 'Faltan datos requeridos' });
+    }
+
+    // Buscar sensor
+    const sensor = await Sensor.findOne({ where: { code } });
+    if (!sensor) {
+      return res.status(404).json({ message: 'Sensor no encontrado' });
+    }
+
+    // Actualizar valor
+    const [updatedRows] = await ValuesTimescaled.update(
+      { value },
+      { where: { timestamp, sensor_id: sensor.id } }
+    );
+
+    if (updatedRows === 0) {
+      return res.status(404).json({ message: 'Registro no encontrado' });
+    }
+
+    res.json({ message: 'Valor actualizado correctamente' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
 };

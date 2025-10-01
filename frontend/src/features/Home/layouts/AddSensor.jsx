@@ -4,7 +4,7 @@ import { useSensorForm } from "../hooks/addSensor/useSensorForm";
 import { useGenerateDescription } from "../hooks/addSensor/useGenerateDescription";
 import { Input } from "@/shared/components/inputs/Input";
 import { Button } from "@/shared/components/buttons/Button"
-import { ToggleButton } from "@/features/Auth/components/buttons/Button";
+import { ToggleButton } from "@/shared/components/buttons/Button";
 import { Modal } from "../components/modals/Modal"
 import { motion } from "framer-motion";
 import { SkeletonPage } from "@/shared/components/skeletons/SkeletonPage";
@@ -90,7 +90,7 @@ export const AddSensor = () => {
   };
 
   return (
-    <div className="lg:w-full md:w-[560px] min-h-[80vh] flex flex-col items-center">
+    <div className="lg:w-full md:w-[560px] min-h-[75vh] flex flex-col items-center">
       <div className="relative flex flex-col items-center lg:w-1/2 p-10 md:w-full">
         {/* ToggleButton fijo */}
         <div className="w-full max-w-2xl flex justify-center mt-10">
@@ -106,7 +106,6 @@ export const AddSensor = () => {
         <div className="mt-24 w-full flex justify-center">
           <div className="relative p-4 lg:w-[700px] md:w-[560px] sm:w-[300px]  h-auto bg-white shadow-lg border py-7 overflow-hidden rounded-md">
 
-            {/* FORMULARIO REGISTRAR */}
             {optionForm === "Registrar" && (
             <motion.div
               initial={{ x: 100, opacity: 0 }}
@@ -114,9 +113,30 @@ export const AddSensor = () => {
               transition={{ duration: 0.6 }}
               className="w-full max-w-lg space-y-4"
             >
-              <Input label="Serial" value={regSerial} setValue={setRegSerial} type="text" input={inputRegSerial} setInput={setInputRegSerial} />
-              <Input label="Código" value={regCodigo} setValue={setRegCodigo} type="text" input={inputRegCodigo} setInput={setInputRegCodigo} />
-              <Input label="Nombre del sensor" value={regNombre} setValue={setRegNombre} type="text" input={inputRegNombre} setInput={setInputRegNombre} />
+              <Input
+                label="Serial"
+                value={regSerial}
+                setValue={setRegSerial}
+                type="text"
+                input={inputRegSerial}
+                setInput={setInputRegSerial}
+              />
+              <Input
+                label="Código"
+                value={regCodigo}
+                setValue={setRegCodigo}
+                type="text"
+                input={inputRegCodigo}
+                setInput={setInputRegCodigo}
+              />
+              <Input
+                label="Nombre del sensor"
+                value={regNombre}
+                setValue={setRegNombre}
+                type="text"
+                input={inputRegNombre}
+                setInput={setInputRegNombre}
+              />
 
               <select
                 className="p-2 border w-full rounded cursor-pointer outline-none"
@@ -124,61 +144,57 @@ export const AddSensor = () => {
                 onChange={(e) => setRegVariable(e.target.value)}
               >
                 <option value="" disabled hidden>Seleccionar variable</option>
-                {dataVariable.map(v => (
+                {dataVariable.map((v) => (
                   <option key={v.id} value={v.name}>{v.name}</option>
                 ))}
               </select>
 
-              <Button
-                onClick={() => generateDescription(regNombre, regVariable)}
-                disabled={!regNombre || !regVariable}
-                variant="primary"
-                size="full"
-              >
-                {loading ? "Generando..." : "Generar descripción"}
-              </Button>
+              {/* 🔹 Campo manual siempre visible */}
+              <div className="mt-4 space-y-2">
+                <label className="text-gray-700 font-medium">Descripción</label>
+                <textarea
+                  className="w-full p-2 border rounded-md"
+                  rows="4"
+                  style={{ minHeight: "100px", maxHeight: "200px", resize: "vertical" }}
+                  value={regDescripcion}
+                  onChange={(e) => setRegDescripcion(e.target.value)}
+                  placeholder="Escribe la descripción del sensor aquí..."
+                />
 
-              {/* 🔹 Caso 1: Modal IA */}
+                {/* Botón IA opcional */}
+                <Button
+                  onClick={() => generateDescription(regNombre, regVariable)}
+                  disabled={!regNombre || !regVariable}
+                  variant="secondary"
+                  size="full"
+                >
+                  {loading ? "Generando..." : "Generar con IA"}
+                </Button>
+              </div>
+
+              {/* Modal IA */}
               {showModal && (
                 <Modal
                   descriptionIA={descriptionIA}
                   success={success}
                   suggestion={suggestion}
-                  onApprove={handleApprove}
+                  onApprove={() => handleApprove(descriptionIA)}
                   onClose={closeModal}
                 />
               )}
 
-              {/* 🔹 Caso 2: Fallback manual */}
-              {manualFallback && (
-                <div className="mt-4">
-                  <p className="text-gray-600">El servicio de IA no respondió a tiempo. Ingresa la descripción manualmente:</p>
-                  <textarea
-                    className="w-full p-2 mt-2 border rounded-md"
-                    rows="4"
-                    value={regDescripcion}
-                    onChange={(e) => setRegDescripcion(e.target.value)}
-                    placeholder="Escribe la descripción del sensor aquí..."
-                  />
-                </div>
-              )}
-
-              {/* {regDescripcion && (
-                <div className="mt-4">
-                  <p className="text-gray-500">Descripción:</p>
-                  <p className="text-gray-900">{regDescripcion}</p>
-                </div>
-              )} */}
-
               <Button
                 onClick={() =>
-                  sendData({
-                    serial: regSerial,
-                    code: regCodigo,
-                    name: regNombre,
-                    variable: regVariable,
-                    description: regDescripcion,
-                  }, resetRegisterForm)
+                  sendData(
+                    {
+                      serial: regSerial,
+                      code: regCodigo,
+                      name: regNombre,
+                      variable: regVariable,
+                      description: regDescripcion,
+                    },
+                    resetRegisterForm
+                  )
                 }
                 disabled={isRegisterDisabled}
                 variant="primary"
@@ -189,6 +205,7 @@ export const AddSensor = () => {
               </Button>
             </motion.div>
           )}
+
 
 
             {/* FORMULARIO MODIFICAR */}
@@ -210,21 +227,10 @@ export const AddSensor = () => {
                   <option value="" disabled>Seleccionar sensor a modificar</option>
                   {allSensors.map(s => (
                     <option key={s.id} value={s.id}>
-                      {s.name} - {s.serial}
+                      {s.name}
                     </option>
                   ))}
                 </select>
-
-                {/* Mostrar información actual si hay un sensor seleccionado */}
-                {selectedModSensor && (
-                  <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
-                    <p className="text-sm text-blue-700 font-medium">Sensor seleccionado:</p>
-                    <p className="text-sm text-blue-600">
-                      {allSensors.find(s => s.id === parseInt(selectedModSensor))?.name} 
-                      ({allSensors.find(s => s.id === parseInt(selectedModSensor))?.serial})
-                    </p>
-                  </div>
-                )}
 
                 <Input 
                   label="Serial" 

@@ -1,63 +1,53 @@
-import { useEffect, useState } from "react";
 import { Card } from "./card/Card";
-import { djangoApi } from "@/shared/api/apiRoutes";
-import { TrainAndPredict } from "@/features/Home/components/prediction/TrainAndPredict";
-
+import { useLatestPredictions } from "@/features/Home/hooks/statistics/useLatestPredictions";
+import { useSensors } from "@/features/Home/hooks/statistics/useSensors";
+import { ICONS_BY_VARIABLE } from "@/features/Home/utils/IconsMap";
+import { formatDate } from "@/features/Home/utils/formatDate";
 // Función para formatear la fecha tipo "Lunes, 16 de septiembre"
-const formatDate = (dateString) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("es-ES", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
-};
 
 export const KPIs = () => {
-  const [latestPrediction, setLatestPrediction] = useState(null);
+  const { latestPrediction, loading: loadingPreds } = useLatestPredictions();
+  const { sensors, loading: loadingSensors } = useSensors();
 
-  useEffect(() => {
-    const fetchPredictions = async () => {
-      console.log('Haciendo petición a:', 'http://127.0.0.1:8000/api/predict-model/latest');
-      try {
-        const res = await djangoApi.get("/predict-model/latest");
-        console.log("Predicciones obtenidas:", res.data);
-        setLatestPrediction(res.data); // guardamos toda la respuesta
-      } catch (err) {
-        console.error("Error fetching predictions:", err);
-      }
-    };
-
-    fetchPredictions();
-  }, []);
+  if (loadingPreds || loadingSensors) {
+    return <p className="p-4">Cargando datos...</p>;
+  }
 
   if (!latestPrediction) {
-    return <p className="p-4">Cargando predicciones...</p>;
+    return <p className="p-4">No hay predicciones disponibles.</p>;
   }
 
   const { prediction_date, predictions } = latestPrediction;
-  const { input_data, predictions: predicted_data } = predictions;
-
+  const { predictions: predicted_data } = predictions;
   const formattedDate = formatDate(prediction_date);
+
+  // 📌 Mapeo de códigos -> nombres de variable
+  const codeToVariableName = sensors.reduce((acc, s) => {
+    acc[s.code] = { 
+      name: s.variable?.name ?? s.name,
+      unit: s.variable?.unit ?? ""
+    };
+    return acc;
+  }, {});
 
   return (
     <div className="bg-gray-50 p-6 rounded-lg shadow-md">
       <h3 className="text-lg font-semibold text-gray-700 mb-4">
-        Predicciones del día <span className="text-sm text-gray-400">- {formattedDate}</span>
+        Predicciones del día{" "}
+        <span className="text-sm text-gray-400">- {formattedDate}</span>
       </h3>
 
       <div className="flex flex-wrap justify-start gap-4">
-        {Object.entries(predicted_data).map(([key, predictedValue]) => {
-          const inputValue = input_data[key] ?? null;
-          const icon = "fa-solid fa-cloud-sun";
+        {Object.entries(predicted_data).map(([code, predictedValue]) => {
+          const variableInfo = codeToVariableName[code] || {}; // 🔹 solo para icono
+          const icon = ICONS_BY_VARIABLE[variableInfo.name] || "fa-solid fa-circle-question";
 
           return (
             <Card
-              key={key}
+              key={code}
               icon={icon}
-              title={key.toUpperCase()}
-              value={predictedValue.toFixed(2)}
-              inputValue={inputValue}
+              title={code.toUpperCase()} // 🔹 aquí ya va el código
+              value={`${predictedValue.toFixed(2)} ${variableInfo.unit}`} // 🔹 y aquí la unidad
             />
           );
         })}

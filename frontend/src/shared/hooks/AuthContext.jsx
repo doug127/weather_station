@@ -14,26 +14,42 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const fetchUser = async () => {
-
             try {
-                const storedUser = localStorage.getItem("user");
+                // Lista de rutas públicas donde NO se debe verificar sesión
+                const publicRoutes = ['/auth', '/verify-email', '/reset-password'];
+                const currentPath = window.location.pathname;
+                
+                // Si estás en ruta pública, no verificar sesión
+                if (publicRoutes.includes(currentPath)) {
+                    setLoading(false);
+                    return;
+                }
+
+                const storedUser = sessionStorage.getItem("user");
                 if (storedUser) {
                     setUser(JSON.parse(storedUser));
                 } else {
                     const res = await api.get("/auth/me", { withCredentials: true });
                     setUser(res.data.user);
-                    localStorage.setItem("user", JSON.stringify(res.data.user));
+                    sessionStorage.setItem("user", JSON.stringify(res.data.user));
                 }
             } catch (error) {
                 setUser(null);
-                localStorage.removeItem("user");
+                sessionStorage.removeItem("user");
                 console.error('Error fetching user:', error);
+                
+                // Solo redirigir si NO estás en ruta pública
+                const publicRoutes = ['/auth', '/verify-email', '/reset-password'];
+                const currentPath = window.location.pathname;
+                if (!publicRoutes.includes(currentPath)) {
+                    navigate("/auth");
+                }
             } finally {
                 setLoading(false);
             }
         }
         fetchUser();
-    }, []);
+    }, [navigate]);
 
     const login = async (identifier, password) => {
         try {
@@ -50,9 +66,9 @@ export const AuthProvider = ({ children }) => {
 
             if (!userData.isVerified) {
                 // Guardar email pendiente
-                localStorage.setItem("pendingEmail", userData.email);
-                localStorage.setItem("fromLogin", "true");
-                localStorage.setItem("fromRegister", "false");
+                sessionStorage.setItem("pendingEmail", userData.email);
+                sessionStorage.setItem("fromLogin", "true");
+                sessionStorage.setItem("fromRegister", "false");
 
                 // Enviar código automáticamente al email
                 try {
@@ -68,7 +84,7 @@ export const AuthProvider = ({ children }) => {
 
             // Usuario verificado: setear sesión
             setUser(userData);
-            localStorage.setItem("user", JSON.stringify(userData));
+            sessionStorage.setItem("user", JSON.stringify(userData));
             navigate("/home");
         } catch (err) {
             setError(err.response?.data?.message || err.message || "Error al iniciar sesión");
@@ -82,8 +98,8 @@ export const AuthProvider = ({ children }) => {
             await api.post("/auth/logout", {}, { withCredentials: true});
             setUser(null);
             setOptionBanner('Init');
-            localStorage.removeItem("user");
-            localStorage.removeItem("optionBanner");
+            sessionStorage.removeItem("user");
+            sessionStorage.removeItem("optionBanner");
         } catch (error) {
             setUser(null);
             console.error('Error logging out:', error);
@@ -103,8 +119,8 @@ export const AuthProvider = ({ children }) => {
 
             console.log("Registro exitoso: ", res);
 
-            localStorage.setItem("pendingEmail", email);
-            localStorage.setItem("fromRegister", "true");
+            sessionStorage.setItem("pendingEmail", email);
+            sessionStorage.setItem("fromRegister", "true");
 
             navigate("/verify-email");
         } catch (err) {
@@ -126,15 +142,15 @@ export const AuthProvider = ({ children }) => {
             console.log("Verificación de email exitosa: ", verifyRes.data);
 
             // Limpiar datos pendientes
-            localStorage.removeItem("pendingEmail");
+            sessionStorage.removeItem("pendingEmail");
             
             if (fromRegister) {
                 // Usuario recién registrado: ir a login
-                localStorage.removeItem("fromRegister");
+                sessionStorage.removeItem("fromRegister");
                 navigate("/auth");
             } else {
                 // Usuario que inició sesión pero no estaba verificado
-                localStorage.removeItem("fromLogin");
+                sessionStorage.removeItem("fromLogin");
                 
                 try {
                     // Intentar obtener los datos del usuario actualizado
@@ -143,7 +159,7 @@ export const AuthProvider = ({ children }) => {
                     
                     if (userData) {
                         setUser(userData);
-                        localStorage.setItem("user", JSON.stringify(userData));
+                        sessionStorage.setItem("user", JSON.stringify(userData));
                         navigate("/home");
                     } else {
                         // Si no se puede obtener el usuario, redirigir a login
@@ -204,7 +220,7 @@ export const AuthProvider = ({ children }) => {
             password,
             passwordConfirm,
             });
-            localStorage.removeItem("recoveryEmail");
+            sessionStorage.removeItem("recoveryEmail");
             navigate("/auth");
         } catch (err) {
             setError(err.response?.data?.message || "Error al restablecer contraseña");
@@ -222,7 +238,7 @@ export const AuthProvider = ({ children }) => {
             const res = await api.patch("/auth/update-username", { username: newUsername }, { withCredentials: true });
 
             setUser({ ...user, username: newUsername });
-            localStorage.setItem("user", JSON.stringify({ ...user, username: newUsername }));
+            sessionStorage.setItem("user", JSON.stringify({ ...user, username: newUsername }));
 
             return res.data.message;
         } catch (err) {

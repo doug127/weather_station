@@ -4,7 +4,7 @@ import { AuthContext } from "@/shared/hooks/AuthContext";
 import { motion } from "framer-motion";
 import { Img } from "../layouts/Img";
 import { Input } from "@/shared/components/inputs/Input";
-import { ToggleButton } from "../components/buttons/Button";
+import { ToggleButton } from "@/shared/components/buttons/Button";
 import { Button } from "@/shared/components/buttons/Button";
 import { SkeletonPage } from "@/shared/components/skeletons/SkeletonPage";
 import { api } from "@/shared/api/apiRoutes";
@@ -23,6 +23,7 @@ export const Auth = () => {
   const [focusConfirmPassword, setFocusConfirmPassword] = useState(false);
   const [passwordConfirm, setConfirmPassword] = useState("");
   const [role, setRole] = useState("user"); // Para registro de roles
+  const [loader, setLoader] = useState(false);
 
   const { user, setUser, login, register, loading, error } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -62,9 +63,9 @@ export const Auth = () => {
     register(username, email, password, passwordConfirm, role);
   };
 
-  if (loading || showSkeleton) {
-    return <SkeletonPage />;
-  }
+  // if (loading || showSkeleton) {
+  //   return <SkeletonPage />;
+  // }
 
 
   return (

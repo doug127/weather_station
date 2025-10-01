@@ -1,4 +1,4 @@
-export const Card = ({ icon, title, value, inputValue }) => {
+export const Card = ({ icon, title, value }) => {
   const icons = "fa-solid fa-chart-gantt"; 
   return (
     <div className="bg-gray-100 lg:w-72 rounded-md shadow-md border p-4 flex items-center gap-4 md:flex md:justify-center md:items-center md:w-full">
@@ -11,8 +11,7 @@ export const Card = ({ icon, title, value, inputValue }) => {
       <div className="flex flex-col">
         {console.log(value)}
         <p className="text-gray-900 font-medium text-sm">{title}</p>
-        <p className="text-2xl font-bold text-gray-600">{value} <span className="text-xl font-bold text-gray-500">-</span> 
-          {inputValue && <span className="text-sm text-blue-600">{inputValue}</span>}
+        <p className="text-2xl font-bold text-gray-600">{value}
         </p>
         <p className="text-xl"></p>
       </div>

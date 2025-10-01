@@ -14,10 +14,10 @@ export const Sidebar = () => {
   const ROLE_ADMIN = 2;
 
   return (
-    <div className="flex h-auto bg-gray-100 relative">
+    <div className="flex w-max-[10vw] h-auto bg-gray-100 relative">
 
       {/* Sidebar fijo para md+ */}
-      <div className="hidden md:block h-screen lg:w-[360px] md:w-25 px-3 py-4 sticky top-0 z-40">
+      <div className="hidden md:block h-screen lg:w-[20vw] md:w-[15vw] px-3 py-4 sticky top-0 z-40">
         <div className="w-full h-full bg-white rounded-md shadow-lg border border-gray-300">
           <div className="flex justify-center items-center p-5">
             <p className="md:hidden">Estación Meteorológica</p>
@@ -26,32 +26,32 @@ export const Sidebar = () => {
             <ul className="flex flex-col p-5 w-full justify-center space-y-2">
               <li onClick={() => setOptionBanner("Init")} className={`${
                 optionBanner === "Init"
-                  ? "bg-gray-800 text-white shadow-lg cursor-pointer"
-                  : "hover:bg-gray-400 hover:text-white text-gray-400 "
+                  ? "sm:justify-center md:justify-start md:items-center bg-gray-800 text-white shadow-lg cursor-pointer"
+                  : "sm:justify-center md:justify-start md:items-center hover:bg-gray-400 hover:text-white text-gray-400 "
               } transition duration-500 ease-in-out p-2 cursor-pointer rounded-md flex`}>
                 <i className="fa-solid fa-house px-5"></i>
                 <span className="md:hidden lg:block">Reseña Histórica</span>
               </li>
               <li onClick={() => setOptionBanner("Articles")} className={`${
                 optionBanner === "Articles"
-                  ? "bg-gray-800 text-white shadow-lg cursor-pointer"
-                  : "hover:bg-gray-400 hover:text-white text-gray-400 "
+                  ? "sm:justify-center md:justify-start md:items-center bg-gray-800 text-white shadow-lg cursor-pointer"
+                  : "sm:justify-center md:justify-start md:items-center hover:bg-gray-400 hover:text-white text-gray-400 "
               } transition duration-500 ease-in-out p-2 cursor-pointer rounded-md flex`}>
                 <i className="fa-solid fa-newspaper px-5"></i>
                 <span className="md:hidden lg:block">Artículos</span>
               </li>
               <li onClick={() => setOptionBanner("Statistics")} className={`${
                 optionBanner === "Statistics"
-                  ? "bg-gray-800 text-white shadow-lg cursor-pointer"
-                  : "hover:bg-gray-400 hover:text-white text-gray-400 "
+                  ? "sm:justify-center md:justify-start md:items-center bg-gray-800 text-white shadow-lg cursor-pointer"
+                  : "sm:justify-center md:justify-start md:items-center hover:bg-gray-400 hover:text-white text-gray-400 "
               } transition duration-500 ease-in-out p-2 cursor-pointer rounded-md flex`}>
                 <i className="fa-solid fa-chart-column px-5"></i>
                 <span className="md:hidden lg:block">Estadísticas</span>
               </li>
               <li onClick={() => setOptionBanner("Tables")} className={`${
                 optionBanner === "Tables"
-                  ? "bg-gray-800 text-white shadow-lg cursor-pointer"
-                  : "hover:bg-gray-400 hover:text-white text-gray-400 "
+                  ? "sm:justify-center md:justify-start md:items-center bg-gray-800 text-white shadow-lg cursor-pointer"
+                  : "sm:justify-center md:justify-start md:items-center hover:bg-gray-400 hover:text-white text-gray-400 "
               } transition duration-500 ease-in-out p-2 cursor-pointer rounded-md flex`}>
                 <i className="fa-solid fa-table px-5"></i>
                 <span className="md:hidden lg:block">Tablas</span>
@@ -59,16 +59,16 @@ export const Sidebar = () => {
               <RequireRole roles={[ROLE_ADMIN, ROLE_SUPERADMIN]} user={user}>
                 <li onClick={() => setOptionBanner("AddSensor")} className={`${
                   optionBanner === "AddSensor"
-                    ? "bg-gray-800 text-white shadow-lg cursor-pointer"
-                    : "hover:bg-gray-400 hover:text-white text-gray-400 "
+                    ? "sm:justify-center md:justify-start md:items-center bg-gray-800 text-white shadow-lg cursor-pointer"
+                    : "sm:justify-center md:justify-start md:items-center hover:bg-gray-400 hover:text-white text-gray-400 "
                 } transition duration-500 ease-in-out p-2 cursor-pointer rounded-md flex`}>
                   <i className="fa-solid fa-chart-line px-5"></i>
                   <span className="md:hidden lg:block">Registrar sensor</span>
                 </li>
                 <li onClick={() => setOptionBanner("AddValues")} className={`${
                   optionBanner === "AddValues"
-                    ? "bg-gray-800 text-white shadow-lg cursor-pointer"
-                    : "hover:bg-gray-400 hover:text-white text-gray-400 "
+                    ? "sm:justify-center md:justify-start md:items-center bg-gray-800 text-white shadow-lg cursor-pointer"
+                    : "sm:justify-center md:justify-start md:items-center hover:bg-gray-400 hover:text-white text-gray-400 "
                 } transition duration-500 ease-in-out p-2 cursor-pointer rounded-md flex`}>
                   <i className="fa-solid fa-chart-simple px-5"></i>
                   <span className="md:hidden lg:block">Registrar valores</span>
@@ -76,8 +76,8 @@ export const Sidebar = () => {
               </RequireRole>
               <li onClick={() => setOptionBanner("User")} className={`${
                 optionBanner === "User"
-                  ? "bg-gray-800 text-white shadow-lg cursor-pointer"
-                  : "hover:bg-gray-400 hover:text-white text-gray-400 "
+                  ? "sm:justify-center md:justify-start md:items-center bg-gray-800 text-white shadow-lg cursor-pointer"
+                  : "sm:justify-center md:justify-start md:items-center hover:bg-gray-400 hover:text-white text-gray-400 "
               } transition duration-500 ease-in-out p-2 cursor-pointer rounded-md flex`}>
                 <i className="fa-solid fa-user px-5"></i>
                 <span className="md:hidden lg:block">Perfil</span>

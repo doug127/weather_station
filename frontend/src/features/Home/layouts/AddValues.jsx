@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useValuesByTimestamp } from "../hooks/addValues/useValuesByTimestamp";
+import { Lock } from "lucide-react";
 import { motion } from "framer-motion";
-import { ToggleButton } from "@/features/Auth/components/buttons/Button";
-import { Input } from "../components/forms/inputs/InputValue";
-import { InputTimestamp } from "../components/forms/inputs/InputTimestamp";
+import Swal from "sweetalert2";
 import { useSensors } from "../hooks/addValues/useSensors";
 import { useSendValues } from "../hooks/addValues/useSendValues";
 import { useTrainAndPredict } from "../hooks/addValues/useTrainAndPredict";
 import { useUploadFile } from "../hooks/addValues/useUploadFile";
+import { ToggleButton } from "@/shared/components/buttons/Button";
+import { SensorInput } from "../components/forms/inputs/InputValue";
+import { InputTimestamp } from "../components/forms/inputs/InputTimestamp";
 import { Button } from "@/shared/components/buttons/Button"
 import { SkeletonPage } from "@/shared/components/skeletons/SkeletonPage";
 
@@ -14,20 +17,23 @@ export const AddValues = () => {
   const [formValues, setFormValues] = useState({});
   const [errors, setErrors] = useState({});
   const [selectedTime, setSelectedTime] = useState("");
-  const [selectedDate, setSelectedDate] = useState(""); 
+  const [selectedDate, setSelectedDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [optionForm, setOptionForm] = useState("Manual");
 
+  // ---- data hooks (SIEMPRE llamados, sin early returns) ----
+  const sensors = useSensors(); // puede ser [] inicialmente
+  const { valuesByTimestamp, loadingValues, hasExistingRecords } = useValuesByTimestamp(selectedDate, selectedTime);
+
+  // reset helper — puede pasarse a hooks si lo necesitas
   const resetForm = () => {
     setFormValues({});
     setSelectedDate("");
     setSelectedTime("");
   };
 
-  const sensors = useSensors();
-
-  // 👉 flujo original
+  // Llamar TODOS los custom hooks aquí, en el MISMO ORDEN en cada render
   const { sendValues } = useSendValues(
     formValues,
     selectedDate,
@@ -37,7 +43,6 @@ export const AddValues = () => {
     sensors
   );
 
-  // 👉 nuevo flujo entrenar/predicción manual
   const { trainAndPredict } = useTrainAndPredict(
     selectedDate,
     selectedTime,
@@ -45,20 +50,62 @@ export const AddValues = () => {
     setLoading
   );
 
-  const hasErrors = Object.values(errors).some(e => e);
-
-  // 👇 Hook para subir archivo
   const { uploadFile, loading: fileLoading, error: fileError, success: fileSuccess } = useUploadFile();
 
-  if (loading || fileLoading) {
+  // ---- efectos (también siempre declarados) ----
+  useEffect(() => {
+    // Solamente observar valuesByTimestamp — no modificar formValues aquí
+    if (valuesByTimestamp.length > 0) {
+      // solo para mostrar badges
+    }
+  }, [valuesByTimestamp]);
+
+  // ---- helpers ----
+  const handleSendValues = () => {
+    const filteredValues = Object.entries(formValues)
+      .filter(([sensorId, value]) => typeof value === "number" && Number.isFinite(value))
+      .map(([sensorId, value]) => ({
+        sensor_id: Number(sensorId),
+        value: value
+      }));
+
+    if (filteredValues.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "Sin valores válidos",
+        text: "Por favor ingresa al menos un valor de sensor."
+      });
+      return;
+    }
+
+    console.log("Guardando valores filtrados:", filteredValues);
+    sendValues(filteredValues);
+  };
+
+  const hasErrors = Object.values(errors).some(e => e);
+  const isLoading = loading || fileLoading;
+
+  // ---- early render (SOLO después de llamar a todos los hooks) ----
+  if (!sensors || sensors.length === 0) {
+    return (
+      <div className="w-full min-h-[75vh] flex items-center justify-center">
+        <div className="text-center text-gray-500">
+          <p className="text-xl mb-2">⚠️ No hay sensores disponibles</p>
+          <p>Por favor verifica la configuración.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
     return <SkeletonPage />;
   }
 
+
   return (
-    <div className="w-full min-h-[80vh] flex flex-col items-center">
-      <div className="relative flex flex-col items-center w-5/6 p-10">
-        {/* ToggleButton */}
-        <div className="w-full max-w-2xl flex justify-center mt-10">
+    <div className="w-full min-h-[75vh] flex flex-col items-center">
+      <div className="relative flex flex-col items-center w-5/6 px-10 py-7">
+        <div className="w-full max-w-2xl flex justify-center mt-8">
           <ToggleButton
             option={optionForm}
             setOption={setOptionForm}
@@ -67,11 +114,9 @@ export const AddValues = () => {
           />
         </div>
 
-        {/* Contenedor de formularios */}
         <div className="mt-24 w-full flex justify-center">
-          <div className="relative p-4 w-full h-auto bg-white shadow-lg border py-7 overflow-hidden rounded-md">
+          <div className="relative p-4 w-full h-auto bg-white shadow-lg border pt-7 overflow-hidden rounded-md">
             
-            {/* --- FORMULARIO MANUAL --- */}
             {optionForm === "Manual" && (
               <motion.div
                 initial={{ x: 100, opacity: 0 }}
@@ -94,30 +139,72 @@ export const AddValues = () => {
                   />
                 </div>
 
+                {loadingValues && (
+                  <div className="text-center text-gray-500 py-2">
+                    Verificando datos existentes...
+                  </div>
+                )}
+
+                {/* MENSAJE si hay registros existentes */}
+                {hasExistingRecords && !loadingValues && (
+                  <div className="mx-3 mb-3 p-3 bg-orange-50 border border-orange-300 rounded-md flex items-center gap-2">
+                    <Lock size={18} className="text-orange-600" />
+                    <span className="text-orange-700 text-sm font-medium">
+                      Hay {valuesByTimestamp.length} registro(s) existente(s) para este timestamp
+                    </span>
+                  </div>
+                )}
+
                 <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 px-3 py-2">
-                  {sensors.map((sensor) => (
-                    <Input 
-                      key={sensor.id} 
-                      sensor={sensor} 
-                      formValues={formValues} 
-                      setFormValues={setFormValues} 
-                      errors={errors}
-                      setErrors={setErrors}
-                    />
-                  ))}
+                  {sensors.map((sensor) => {
+                    // VALIDACIÓN - Asegurar que sensor existe y tiene id
+                    if (!sensor || !sensor.id) {
+                      console.error("❌ Sensor inválido:", sensor);
+                      return null;
+                    }
+
+                    const sensorData = valuesByTimestamp.find(
+                      v => Number(v.sensor_id) === Number(sensor.id)
+                    );
+
+                    if (sensorData) {
+                      return (
+                        <div
+                          key={sensor.id}
+                          className="p-3 bg-orange-50 border border-orange-300 rounded-md flex justify-between items-center"
+                        >
+                          <span className="font-medium text-gray-700">{sensor.code}</span>
+                          <span className="font-semibold text-orange-600">
+                            {sensorData.value ?? "Ø"}
+                          </span>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <SensorInput
+                        key={sensor.id}
+                        sensor={sensor}
+                        formValues={formValues}
+                        setFormValues={setFormValues}
+                        errors={errors}
+                        setErrors={setErrors}
+                        hasExistingData={false}
+                      />
+                    );
+                  })}
                 </div>
-                
-                {/* Botón normal */}
+
+                {/* Botón para enviar solo inputs editables */}
                 <Button 
-                  onClick={sendValues}
+                  onClick={handleSendValues} // <--- Aquí usamos la función que filtra
                   size="full" 
                   className="mt-4" 
-                  disabled={hasErrors || sensors.length === 0}
+                  disabled={hasErrors || Object.keys(formValues).length === 0}
                 >
                   Registrar valores
                 </Button>
 
-                {/* Botón adicional con confirmación */}
                 <Button 
                   onClick={trainAndPredict}
                   size="full" 
