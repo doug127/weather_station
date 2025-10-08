@@ -1,9 +1,9 @@
 import { useState, useContext } from "react";
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/shared/components/inputs/Input"
-import { Img } from "../layouts/Img"
+import { Button } from "@/shared/components/buttons/Button"
 import { AuthContext } from "@/shared/hooks/AuthContext";
+import { AuthFormLayout } from "../layouts/AuthFormLayout";
 
 export const ResetCode = () => {
   const [code, setCode] = useState("");
@@ -25,33 +25,47 @@ export const ResetCode = () => {
   };
 
   return (
-    <div className="flex h-screen w-screen">
-      <div className="flex flex-col justify-center items-center w-1/2 p-10">
-        <motion.div
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.6 }}
-          className="w-full max-w-sm space-y-4"
-        >
-          <h2 className="text-xl font-bold text-center">Restablecer contraseña</h2>
+    <AuthFormLayout
+      title="Restablecer Contraseña"
+    >
+          <Input 
+            label="Código" 
+            value={code} 
+            setValue={setCode} 
+            type="number" 
+            input={focusCode} 
+            setInput={setFocusCode}
+          />
+          <Input 
+            label="Nueva contraseña" 
+            value={password} 
+            setValue={setPassword} 
+            type="password" 
+            input={focusPassword} 
+            setInput={setFocusPassword}
+            validationType="password"
+          />
+          <Input 
+            label="Confirmar contraseña" 
+            value={passwordConfirm} 
+            setValue={setPasswordConfirm} 
+            type="password" 
+            input={focusConfirmPassword} 
+            setInput={setFocusConfirmPassword}
+            validationType="passwordConfirm"
+            compareWith={password}
+          />
 
-          <Input label="Código" value={code} setValue={setCode} type="number" input={focusCode} setInput={setFocusCode}/>
-          <Input label="Nueva contraseña" value={password} setValue={setPassword} type="password" input={focusPassword} setInput={setFocusPassword}/>
-          <Input label="Confirmar contraseña" value={passwordConfirm} setValue={setPasswordConfirm} type="password" input={focusConfirmPassword} setInput={setFocusConfirmPassword}/>
-
-          <button
-            className="w-full bg-gray-900 text-white py-2 rounded-md hover:bg-gray-700"
+          <Button
+            variant="primary"
+            size="full"
             type="submit"
             onClick={onSubmitReset}
           >
             Cambiar contraseña
-          </button>
+          </Button>
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
-        </motion.div>
-      </div>
-      
-        <Img/>
-    </div>
+    </AuthFormLayout>
   );
 };

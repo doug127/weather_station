@@ -22,7 +22,12 @@ export const App = () => {
       <Route 
         path="/" 
         element={
-          user ? <Navigate to="/home" replace /> : <Navigate to="/auth" replace />
+          // 👇 Verificar skipCheck antes de redirigir
+          sessionStorage.getItem("skipSessionCheck") === "true" 
+            ? <Navigate to="/verify-email" replace />
+            : user 
+              ? <Navigate to="/home" replace /> 
+              : <Navigate to="/auth" replace />
         } 
       />
 
@@ -73,11 +78,15 @@ export const App = () => {
         <Route path="" element={<Home />} />
       </Route>
 
-      {/* Ruta de fallback para cualquier ruta no encontrada */}
+      {/* Ruta de fallback */}
       <Route 
         path="*" 
         element={
-          user ? <Navigate to="/home" replace /> : <Navigate to="/auth" replace />
+          sessionStorage.getItem("skipSessionCheck") === "true"
+            ? <Navigate to="/verify-email" replace />
+            : user 
+              ? <Navigate to="/home" replace /> 
+              : <Navigate to="/auth" replace />
         } 
       />
     </Routes>

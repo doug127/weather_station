@@ -19,14 +19,14 @@ export const Button = ({
   type = "button",
   onClick,
   disabled = false,
-  variant = "primary", // primary | secondary | danger | ghost
-  size = "md", // sm | md | lg | full
+  variant = "primary",
+  size = "md",
   className = "",
 }) => {
   const variants = {
-    none: "text-sm text-blue-600 hover:underline mt-2",
+    none: "text-sm font-medium md:font-normal text-blue-600 hover:underline mt-2",
     primary: "bg-gray-800 hover:bg-gray-700 text-white",
-    secondary: "bg-gray-300 hover:bg-gray-400 text-gray-900",
+    secondary: "bg-gray-400 hover:bg-gray-500 text-gray-900",
     danger: "bg-red-600 hover:bg-red-500 text-white",
     ghost: "bg-transparent hover:bg-gray-100 text-gray-800 border border-gray-300",
   };
@@ -36,7 +36,7 @@ export const Button = ({
     secondary: "bg-gray-200 text-gray-400 cursor-not-allowed",
     danger: "bg-red-300 text-gray-100 cursor-not-allowed",
     ghost: "bg-gray-100 text-gray-400 cursor-not-allowed border",
-    none: "text-gray-400 cursor-not-allowed",
+    none: "text-gray-400 cursor-not-allowed md:font-normal xs:font-medium",
   };
 
   const sizes = {
@@ -67,20 +67,19 @@ export const Button = ({
 import {motion} from "framer-motion";
 
 export const ToggleButton = ({option, setOption, leftOption, rightOption, className=""}) => {
-
     return (
-        <div className={`absolute top-12 flex w-64 bg-gray-200 rounded-full p-1 ${className}`}>
+        <div className={`relative lg:absolute lg:top-12 flex w-full lg:w-64 bg-gray-200 rounded-full p-1 mb-6 lg:mb-0 ${className}`}>
             <motion.div
             layout
             transition={{ type: "spring", stiffness: 100, damping: 20 }}
-            className="absolute top-1 bottom-1 w-1/2 bg-gray-900 rounded-full"
+            className="absolute h-[calc(100%-0.5rem)] top-1 w-[calc(50%)] bg-gray-900 rounded-full"
             style={{
                 left: option === `${leftOption}` ? "0.25rem" : "calc(50% - 0.25rem)",
             }}
             />
             <button
             onClick={() => setOption(`${leftOption}`)}
-            className={`relative z-10 w-1/2 text-center py-2 font-medium ${
+            className={`relative z-10 w-1/2 text-center py-2 font-medium transition-colors ${
                 option === `${leftOption}` ? "text-white" : "text-gray-600"
             }`}
             >
@@ -88,7 +87,7 @@ export const ToggleButton = ({option, setOption, leftOption, rightOption, classN
             </button>
             <button
             onClick={() => setOption(`${rightOption}`)}
-            className={`relative z-10 w-1/2 text-center py-2 font-medium ${
+            className={`relative z-10 w-1/2 text-center py-2 font-medium transition-colors ${
                 option === `${rightOption}` ? "text-white" : "text-gray-600"
             }`}
             >

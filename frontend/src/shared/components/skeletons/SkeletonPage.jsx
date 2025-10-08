@@ -1,9 +1,9 @@
 export const SkeletonPage = () => {
     return (
-        <div className="w-full h-[75vh] flex justify-center items-center gap-x-2 bg-white rounded-md shadow-md">
-            <div className="w-4 h-4 rounded-full bg-blue-700 animate-bounce"></div>
-            <div className="w-4 h-4 rounded-full bg-blue-700 animate-bounce [animation-delay:-.3s]"></div>
-            <div className="w-4 h-4 rounded-full bg-blue-700 animate-bounce [animation-delay:-.5s]"></div>
+        <div className="w-full h-[100vh] flex justify-center items-center gap-x-2 bg-white rounded-md shadow-md">
+            <div className="w-6 h-6 rounded-full bg-blue-700 animate-bounce"></div>
+            <div className="w-6 h-6 rounded-full bg-blue-700 animate-bounce [animation-delay:-.3s]"></div>
+            <div className="w-6 h-6 rounded-full bg-blue-700 animate-bounce [animation-delay:-.5s]"></div>
         </div>
     );
 }

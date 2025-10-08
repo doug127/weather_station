@@ -1,4 +1,5 @@
-import { createContext, useState, useEffect, useContext } from "react";
+import { createContext, useState, useEffect, useContext, useRef } from "react";
+import Swal from 'sweetalert2';
 import { api } from '../api/apiRoutes';
 import { useNavigate } from "react-router-dom";
 import { Context } from "../api/contextProvider";
@@ -10,18 +11,30 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const { setOptionBanner } = useContext(Context);
+    const [skipSessionCheck, setSkipSessionCheck] = useState(false);
+    const hasCheckedSession = useRef(false);
     const navigate = useNavigate();
 
     useEffect(() => {
+        if (hasCheckedSession.current) {
+            return;
+        }
+
+        const skipCheck = sessionStorage.getItem("skipSessionCheck");
+        if (skipCheck === "true") {
+            setLoading(false);
+            hasCheckedSession.current = true;
+            return;
+        }
+        
         const fetchUser = async () => {
             try {
-                // Lista de rutas públicas donde NO se debe verificar sesión
-                const publicRoutes = ['/auth', '/verify-email', '/reset-password'];
+                const publicRoutes = ['/auth', '/verify-email', '/reset-password', '/forgot-password', '/reset-code'];
                 const currentPath = window.location.pathname;
                 
-                // Si estás en ruta pública, no verificar sesión
                 if (publicRoutes.includes(currentPath)) {
                     setLoading(false);
+                    hasCheckedSession.current = true; 
                     return;
                 }
 
@@ -36,48 +49,46 @@ export const AuthProvider = ({ children }) => {
             } catch (error) {
                 setUser(null);
                 sessionStorage.removeItem("user");
-                console.error('Error fetching user:', error);
-                
-                // Solo redirigir si NO estás en ruta pública
-                const publicRoutes = ['/auth', '/verify-email', '/reset-password'];
+                console.error("❌ Error en fetchUser:", error);
+
+                const publicRoutes = ['/auth', '/verify-email', '/reset-password', '/forgot-password', '/reset-code'];
                 const currentPath = window.location.pathname;
+                
                 if (!publicRoutes.includes(currentPath)) {
                     navigate("/auth");
                 }
             } finally {
                 setLoading(false);
+                hasCheckedSession.current = true; 
             }
         }
         fetchUser();
-    }, [navigate]);
+    }, []);
 
     const login = async (identifier, password) => {
         try {
             setLoading(true);
             setError(null);
 
-            // Login
             await api.post("/auth/login", { identifier, password }, { withCredentials: true });
             
-            // Obtener info del usuario
             const res = await api.get("/auth/me", { withCredentials: true });
             const userData = res.data.user;
             if (!userData) throw new Error("No se pudo obtener la información del usuario");
 
             if (!userData.isVerified) {
-                // Guardar email pendiente
                 sessionStorage.setItem("pendingEmail", userData.email);
                 sessionStorage.setItem("fromLogin", "true");
                 sessionStorage.setItem("fromRegister", "false");
+                sessionStorage.setItem("skipSessionCheck", "true");
 
-                // Enviar código automáticamente al email
                 try {
                     await api.post("/auth/resend-code", { email: userData.email });
-                    console.log("Código de verificación enviado al correo automáticamente.");
                 } catch (err) {
                     console.error("Error enviando el código automáticamente:", err);
                 }
 
+                setSkipSessionCheck(true);
                 navigate("/verify-email");
                 return;
             }
@@ -87,7 +98,17 @@ export const AuthProvider = ({ children }) => {
             sessionStorage.setItem("user", JSON.stringify(userData));
             navigate("/home");
         } catch (err) {
-            setError(err.response?.data?.message || err.message || "Error al iniciar sesión");
+            const message = err.response?.data?.message || err.message || "Error al iniciar sesión";
+            
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de autenticación',
+                text: message,
+                confirmButtonColor: '#2563eb',
+            })
+            console.error("Error del login: ", message);
+            setError(message);
+
         } finally {
             setLoading(false);
         }
@@ -98,8 +119,7 @@ export const AuthProvider = ({ children }) => {
             await api.post("/auth/logout", {}, { withCredentials: true});
             setUser(null);
             setOptionBanner('Init');
-            sessionStorage.removeItem("user");
-            sessionStorage.removeItem("optionBanner");
+            sessionStorage.clear();
         } catch (error) {
             setUser(null);
             console.error('Error logging out:', error);
@@ -108,26 +128,33 @@ export const AuthProvider = ({ children }) => {
         }
     }
 
-    const register = async (username, email, password, passwordConfirm) => {
+    const register = async (username, email, passwordReg, passwordConfirm, role) => {
         try {
-            setLoading(true);
             setError(null);
 
             const res = await api.post("/auth/register",
-                { username, email, password, passwordConfirm }
+                { username, email, password: passwordReg, passwordConfirm, role }
             )
-
-            console.log("Registro exitoso: ", res);
 
             sessionStorage.setItem("pendingEmail", email);
             sessionStorage.setItem("fromRegister", "true");
+            sessionStorage.setItem("skipSessionCheck", "true");
 
+            
             navigate("/verify-email");
+            
         } catch (err) {
-            console.error("Error registrando usuario:", err);
-            alert(err.response?.data?.message || "Error en el registro");
-        } finally {
-            setLoading(false);
+            const message = err.response?.data?.message || "Error en el registro";
+            console.error("❌ Error en register:", message);
+
+            Swal.fire({
+                icon: "error",
+                title: "Error en el proceso de registro",
+                text: message,
+                confirmButtonColor: '#2563eb'
+            })
+
+            setError(message);
         }
     }
 
@@ -139,14 +166,14 @@ export const AuthProvider = ({ children }) => {
 
             // Verificar el email
             const verifyRes = await api.post("/auth/verify-email", { email, code: intCode });
-            console.log("Verificación de email exitosa: ", verifyRes.data);
-
+            
             // Limpiar datos pendientes
             sessionStorage.removeItem("pendingEmail");
             
             if (fromRegister) {
                 // Usuario recién registrado: ir a login
                 sessionStorage.removeItem("fromRegister");
+                sessionStorage.setItem("showSuccessAlert", "true");
                 navigate("/auth");
             } else {
                 // Usuario que inició sesión pero no estaba verificado
@@ -174,8 +201,17 @@ export const AuthProvider = ({ children }) => {
             }
 
         } catch (err) {
+            const message = err.response?.data?.message || "Error en la verificación";
             console.error("Error verificando email:", err);
-            setError(err.response?.data?.message || "Error en la verificación");
+
+            Swal.fire({
+                icon: "error",
+                title: "Error en el proceso de registro",
+                text: message,
+                confirmButtonColor: '#2563eb'
+            })
+
+            setError(message);
         } finally {
             setLoading(false);
         }
@@ -187,7 +223,6 @@ export const AuthProvider = ({ children }) => {
             setError(null);
 
             const res = await api.post("/auth/resend-code", { email });
-            console.log(res.data.message);
         } catch (error) {
             console.error("Error resending code:", error.response?.data || error.message);
             throw error;
@@ -251,7 +286,7 @@ export const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={{ 
-            user, 
+            user,
             login, 
             logout, 
             loading, 

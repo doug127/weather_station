@@ -64,7 +64,7 @@ export const useSingleChart = ({
       const maxDate = originalData[originalData.length - 1].x;
 
       // Generar timestamps uniformes para el eje X (12 puntos)
-      const tickAmount = 12;
+      const tickAmount = 13;
       const step = (maxDate - minDate) / (tickAmount - 1);
       const uniformX = Array.from({ length: tickAmount }, (_, i) => minDate + step * i);
 
