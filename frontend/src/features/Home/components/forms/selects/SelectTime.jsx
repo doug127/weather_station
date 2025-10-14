@@ -6,7 +6,7 @@ export const SelectTime = ({ value, setValue, loading }) => {
               e.preventDefault();
               setValue(e.target.value);
             }}
-            className="border rounded px-3 text-xs cursor-pointer outline-none"
+            className="border border-gray-300 rounded pl-0 text-xs py-1 cursor-pointer outline-none"
             disabled={loading}
           >
             <option value="all">Todos</option>

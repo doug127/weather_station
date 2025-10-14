@@ -4,7 +4,7 @@ import { useSensorForm } from "../hooks/addSensor/useSensorForm";
 import { useGenerateDescription } from "../hooks/addSensor/useGenerateDescription";
 import { Input } from "@/shared/components/inputs/Input";
 import { Button } from "@/shared/components/buttons/Button"
-import { ToggleButton } from "@/shared/components/buttons/Button";
+import { ToggleButton } from "@/shared/components/buttons/ToggleButton";
 import { Modal } from "../components/modals/Modal"
 import { motion } from "framer-motion";
 import { SkeletonPage } from "@/shared/components/skeletons/SkeletonPage";

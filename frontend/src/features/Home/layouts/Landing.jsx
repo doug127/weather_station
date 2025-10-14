@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { SkeletonPage } from "@/shared/components/skeletons/SkeletonPage";
 
 export const Landing = () => {
@@ -19,7 +18,7 @@ export const Landing = () => {
 
             <div className="w-full max-w-4xl mt-6 flex flex-col md:flex-row md:space-x-6">
                 <img
-                    src="imgs/bomberos_1.jpg"
+                    src="/imgs/bomberos_1.jpg"
                     className="w-full md:w-[330px] h-auto md:h-[225px] object-cover mb-4 md:mb-0 rounded-md shadow-md"
                     alt="Cuerpo de Bomberos Universitarios"
                 />
@@ -50,7 +49,7 @@ export const Landing = () => {
 
             <div className="w-full max-w-4xl mt-6 flex flex-col md:flex-row-reverse md:space-x-reverse md:space-x-6 items-start">
                 <img 
-                    src="imgs/bomberos_2.jpg" 
+                    src="/imgs/bomberos_2.jpg" 
                     className="w-full md:w-[300px] h-auto md:h-[160px] object-cover mb-4 md:mb-0 rounded-md shadow-md" 
                     alt="Cuerpo de Bomberos Universitarios" 
                 />

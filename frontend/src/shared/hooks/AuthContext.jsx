@@ -1,8 +1,7 @@
-import { createContext, useState, useEffect, useContext, useRef } from "react";
+import { createContext, useState, useEffect, useRef } from "react";
 import Swal from 'sweetalert2';
 import { api } from '../api/apiRoutes';
 import { useNavigate } from "react-router-dom";
-import { Context } from "../api/contextProvider";
 
 export const AuthContext = createContext();
 
@@ -10,7 +9,6 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const { setOptionBanner } = useContext(Context);
     const [skipSessionCheck, setSkipSessionCheck] = useState(false);
     const hasCheckedSession = useRef(false);
     const navigate = useNavigate();
@@ -118,7 +116,6 @@ export const AuthProvider = ({ children }) => {
         try {
             await api.post("/auth/logout", {}, { withCredentials: true});
             setUser(null);
-            setOptionBanner('Init');
             sessionStorage.clear();
         } catch (error) {
             setUser(null);

@@ -1,7 +1,6 @@
 import { PrcpChart } from "../components/statistics/charts/PrcpChart";
 import { TempChart } from "../components/statistics/charts/TempChart";
 import { MultiChart } from "../components/statistics/charts/MultiChart";
-// import { ChirpsMap } from "./charts/ChirpsMap";
 import { KPIs } from "../components/statistics/kpi/Kpi";
 
 export const Statistics = () => {
@@ -11,29 +10,20 @@ export const Statistics = () => {
   const sensorPrcpChart = "Pluviómetro";
   const sensorTempChart = ["Sensor Temperatura Promedio", "Sensor Temperatura Máxima", "Sensor Temperatura Mínima"];
   const excludedSensors = [sensorPrcpChart, ...sensorTempChart];
+  const components = [
+    { Component: KPIs, props: {} },
+    { Component: PrcpChart, props: { dateLastYear, sensorPrcpChart } },
+    { Component: TempChart, props: { dateLastYear, sensorTempChart } },
+    { Component: MultiChart, props: { dateLastYear, excludedSensors } },
+  ];
 
   return (
-    <div className="p-4 space-y-6">
-      <div className="w-full">
-        <KPIs />
-      </div>
-
-      <div className="w-full">
-        <PrcpChart dateLastYear={dateLastYear} sensorPrcpChart={sensorPrcpChart} />
-      </div>
-
-      <div className="w-full">
-        <TempChart dateLastYear={dateLastYear} sensorTempChart={sensorTempChart} />
-      </div>
-
-      <div className="flex flex-wrap gap-5">
-        <div className="flex-1 min-w-[300px]">
-          <MultiChart dateLastYear={dateLastYear} excludedSensors={excludedSensors} />
+    <div className="p-4 space-y-6 w-full min-h-[75vh] flex flex-col items-center">
+      {components.map(({ Component, props }, index) => (
+        <div className="w-[calc(100vw-30vw)]" key={index}>
+          <Component {...props} />
         </div>
-        {/* <div className="flex-1 min-w-[300px]">
-          <ChirpsMap title="Visitors Overview" />
-        </div> */}
-      </div>
+      ))}
     </div>
   );
 };

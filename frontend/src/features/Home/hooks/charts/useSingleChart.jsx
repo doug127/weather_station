@@ -4,19 +4,32 @@ import { api } from "@/shared/api/apiRoutes";
 export const useSingleChart = ({
   sensor,
   dateLastYear,
-  options = {}
+  options = {},
+  tickAmount: initialTickAmount = 13
 }) => {
   const [chartOptions, setChartOptions] = useState({});
   const [series, setSeries] = useState([]);
-  const [sensorInfo, setSensorInfo] = useState({ 
-    sensor: "", 
-    variable: "", 
-    unit: "", 
-    lastUpdated: "" 
+  const [sensorInfo, setSensorInfo] = useState({
+    sensor: "",
+    variable: "",
+    unit: "",
+    lastUpdated: ""
   });
   const [dateRange, setDateRange] = useState("15d");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [tickAmount, setTickAmount] = useState(initialTickAmount); // ✅ ahora es dinámico
+
+  useEffect(() => {
+    const updateTickAmount = () => {
+      if (window.innerWidth <  1024) setTickAmount(6);      // móviles
+      else setTickAmount(13);                             // escritorio
+    };
+
+    updateTickAmount(); // 👈 se ejecuta inmediatamente al montar
+    window.addEventListener("resize", updateTickAmount);
+    return () => window.removeEventListener("resize", updateTickAmount);
+  }, []);
 
   const getDateRange = () => {
     const endDate = new Date();
@@ -28,7 +41,8 @@ export const useSingleChart = ({
       case "3m": startDate.setMonth(endDate.getMonth() - 3); break;
       case "6m": startDate.setMonth(endDate.getMonth() - 6); break;
       case "1a": startDate.setFullYear(endDate.getFullYear() - 1); break;
-      case "all": default: startDate = new Date(dateLastYear); break;
+      case "all":
+      default: startDate = new Date(dateLastYear); break;
     }
 
     return { startDate: startDate.toISOString(), endDate: endDate.toISOString() };
@@ -52,7 +66,6 @@ export const useSingleChart = ({
         return;
       }
 
-      // Convertir valores a timestamp y value
       const originalData = sensorData.values
         .filter(v => v.timestamp)
         .map(v => ({
@@ -63,27 +76,24 @@ export const useSingleChart = ({
       const minDate = originalData[0].x;
       const maxDate = originalData[originalData.length - 1].x;
 
-      // Generar timestamps uniformes para el eje X (12 puntos)
-      const tickAmount = 13;
-      const step = (maxDate - minDate) / (tickAmount - 1);
-      const uniformX = Array.from({ length: tickAmount }, (_, i) => minDate + step * i);
+      setSeries([{ 
+        name: sensorData.sensor, 
+        data: originalData, 
+        color: "#1A56DB" 
+      }]);
 
-      // Interpolar los valores del sensor sobre los timestamps uniformes
-      const interpolatedData = uniformX.map(x => {
-        // Buscar el valor más cercano
-        let nearest = originalData.reduce((prev, curr) =>
-          Math.abs(curr.x - x) < Math.abs(prev.x - x) ? curr : prev
-        );
-        return { x, y: nearest.y };
-      });
-
-      setSeries([{ name: sensorData.sensor, data: interpolatedData, color: "#1A56DB" }]);
       setSensorInfo({
         sensor: sensorData.sensor,
         variable: sensorData.variable,
         unit: sensorData.unit,
         lastUpdated: response.data.lastUpdated
       });
+
+      // Calcular ticks según el tamaño de pantalla detectado
+      const tickCount = tickAmount || 13;
+      const tickPositions = Array.from({ length: tickCount }, (_, i) => 
+        minDate + ((maxDate - minDate) / (tickCount - 1)) * i
+      );
 
       setChartOptions({
         chart: { type: "area", toolbar: { show: false }, fontFamily: "Inter, sans-serif" },
@@ -99,14 +109,13 @@ export const useSingleChart = ({
           type: "datetime",
           min: minDate,
           max: maxDate,
-          tickAmount: tickAmount - 1,
-          labels: { formatter: val => new Date(val).toLocaleDateString("es-ES", { day: "2-digit", month: "short" }) }
+          tickAmount: tickCount - 1,
+          labels: { formatter: val => new Date(val).toLocaleDateString("es-ES", { day: "2-digit", month: "short" }) },
+          tickPlacement: "on",
+          tickPositions
         },
         yaxis: { show: true }
       });
-
-      console.log(`Single chart processed: ${interpolatedData.length} uniform data points`);
-
     } catch (err) {
       console.error("Error fetching single chart data:", err);
       setError(err.message);
@@ -116,8 +125,32 @@ export const useSingleChart = ({
     }
   };
 
+  // 🔹 Ejecutar fetchData después de conocer tickAmount inicial
+  useEffect(() => {
+    if (sensor && tickAmount) fetchData();
+  }, [dateRange, sensor, dateLastYear, tickAmount]);
 
-  useEffect(() => { if (sensor) fetchData(); }, [dateRange, sensor, dateLastYear]);
+  // 🔹 Actualizar los ticks dinámicamente sin hacer fetch
+  useEffect(() => {
+    if (!chartOptions.xaxis) return;
+
+    const { min, max } = chartOptions.xaxis;
+    if (!min || !max) return;
+
+    const tickCount = tickAmount || 13;
+    const newTickPositions = Array.from({ length: tickCount }, (_, i) =>
+      min + ((max - min) / (tickCount - 1)) * i
+    );
+
+    setChartOptions((prev) => ({
+      ...prev,
+      xaxis: {
+        ...prev.xaxis,
+        tickAmount: tickCount - 1,
+        tickPositions: newTickPositions,
+      },
+    }));
+  }, [tickAmount]);
 
   return {
     chartOptions,

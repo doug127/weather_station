@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@lottiefiles/dotlottie-react": "^0.17.5",
     "apexcharts": "^5.2.0",
     "axios": "^1.10.0",
     "framer-motion": "^12.23.6",

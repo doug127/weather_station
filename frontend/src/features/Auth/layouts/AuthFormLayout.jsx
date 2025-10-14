@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Img } from './Img'
-import { ToggleButton } from '@/shared/components/buttons/Button';
+import { ToggleButton } from '@/shared/components/buttons/ToggleButton';
 
 export const AuthFormLayout = (
 { 

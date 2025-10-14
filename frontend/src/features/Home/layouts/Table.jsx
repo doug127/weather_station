@@ -3,7 +3,9 @@ import { motion } from "framer-motion";
 import { useSensorsData } from "@/features/Home/hooks/table/useSensorData";
 import { useExportExcel } from "@/features/Home/hooks/table/useExportExcel";
 import { useEditableTable } from "@/features/Home/hooks/table/useEditableTable";
-import { ButtonPagination, Button, ToggleButton } from "@/shared/components/buttons/Button";
+import { ButtonPagination } from "@/shared/components/buttons/ButtonPagination";
+import { Button } from "@/shared/components/buttons/Button"
+import { ToggleButton } from "@/shared/components/buttons/ToggleButton";
 import { InputDate } from "../components/forms/inputs/InputDate";
 
 const ITEMS_PER_PAGE = 10;
@@ -120,6 +122,8 @@ export const Table = () => {
                 >
                   Edición
                 </button>
+
+                
               </div>
             </div>
           </div>

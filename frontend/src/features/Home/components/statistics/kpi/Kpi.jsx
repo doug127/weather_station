@@ -37,17 +37,17 @@ export const KPIs = () => {
         <span className="text-sm text-gray-400">- {formattedDate}</span>
       </h3>
 
-      <div className="flex flex-wrap justify-start gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {Object.entries(predicted_data).map(([code, predictedValue]) => {
-          const variableInfo = codeToVariableName[code] || {}; // 🔹 solo para icono
+          const variableInfo = codeToVariableName[code] || {};
           const icon = ICONS_BY_VARIABLE[variableInfo.name] || "fa-solid fa-circle-question";
 
           return (
             <Card
               key={code}
               icon={icon}
-              title={code.toUpperCase()} // 🔹 aquí ya va el código
-              value={`${predictedValue.toFixed(2)} ${variableInfo.unit}`} // 🔹 y aquí la unidad
+              title={code.toUpperCase()}
+              value={`${predictedValue.toFixed(2)} ${variableInfo.unit}`}
             />
           );
         })}

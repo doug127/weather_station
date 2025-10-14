@@ -1,9 +1,9 @@
-export const RequireRole = ({ roles, user, children }) => {
+export const RequireRole = ({ minRole, user, children }) => {
     if(!user) return null;
     
-    const roleId = Number(user.role_id); // 👈 forzamos a number
+    const userRole = Number(user.role_id);
     
-    if (!roles.includes(roleId)) return null;
+    if (userRole > minRole) return null;
     
     return children;
 }

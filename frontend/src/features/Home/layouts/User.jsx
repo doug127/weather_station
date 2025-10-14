@@ -135,7 +135,7 @@ export const User = () => {
       </div>
 
       {/* 🔹 Accordion SuperAdmin - Gestionar roles */}
-      <RequireRole roles={[ROLE_SUPERADMIN]} user={user}>
+      <RequireRole minRole={ROLE_SUPERADMIN} user={user}>
         <div className="w-full max-w-md border rounded-lg shadow p-4">
           <button
             className="w-full text-left font-semibold text-lg"

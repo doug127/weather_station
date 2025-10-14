@@ -7,9 +7,9 @@ import { useSensors } from "../hooks/addValues/useSensors";
 import { useSendValues } from "../hooks/addValues/useSendValues";
 import { useTrainAndPredict } from "../hooks/addValues/useTrainAndPredict";
 import { useUploadFile } from "../hooks/addValues/useUploadFile";
-import { ToggleButton } from "@/shared/components/buttons/Button";
 import { SensorInput } from "../components/forms/inputs/InputValue";
 import { InputTimestamp } from "../components/forms/inputs/InputTimestamp";
+import { ToggleButton } from "@/shared/components/buttons/ToggleButton";
 import { Button } from "@/shared/components/buttons/Button"
 import { SkeletonPage } from "@/shared/components/skeletons/SkeletonPage";
 

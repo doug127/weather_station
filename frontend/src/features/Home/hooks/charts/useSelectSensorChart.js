@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/shared/api/apiRoutes";
 
-export const useSelectSensorChart = ({ dateLastYear, excludedSensors = [] }) => {
+export const useSelectSensorChart = ({ dateLastYear, excludedSensors = [], tickAmount = 13 }) => {
   const [options, setOptions] = useState({});
   const [series, setSeries] = useState([]);
   const [salesDateRange, setSalesDateRange] = useState("15d");
@@ -37,10 +37,7 @@ export const useSelectSensorChart = ({ dateLastYear, excludedSensors = [] }) => 
         break;
     }
 
-    return {
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-    };
+    return { startDate: startDate.toISOString(), endDate: endDate.toISOString() };
   };
 
   // 🔹 Obtener lista de sensores
@@ -50,15 +47,9 @@ export const useSelectSensorChart = ({ dateLastYear, excludedSensors = [] }) => 
         setLoading(true);
         const res = await api.get(`/sensor`);
         const sensors = res.data.data.map((s) => s.name);
-
-        const filteredSensors = sensors.filter(
-          (sensor) => !excludedSensors.includes(sensor)
-        );
-
+        const filteredSensors = sensors.filter((sensor) => !excludedSensors.includes(sensor));
         setAvailableSensors(filteredSensors);
-        if (filteredSensors.length > 0) {
-          setSelectedSensor(filteredSensors[0]);
-        }
+        if (filteredSensors.length > 0) setSelectedSensor(filteredSensors[0]);
       } catch (err) {
         console.error("Error fetching sensors:", err);
         setError("No se pudieron cargar los sensores");
@@ -66,11 +57,10 @@ export const useSelectSensorChart = ({ dateLastYear, excludedSensors = [] }) => 
         setLoading(false);
       }
     };
-
     fetchSensors();
   }, [excludedSensors]);
 
-  // 🔹 Cargar datos del sensor seleccionado desde el backend con rango real
+  // 🔹 Cargar datos del sensor seleccionado desde el backend
   useEffect(() => {
     if (!selectedSensor) return;
 
@@ -80,18 +70,11 @@ export const useSelectSensorChart = ({ dateLastYear, excludedSensors = [] }) => 
         setError(null);
 
         const { startDate, endDate } = getDateRange();
-
         const response = await api.get(`/value/filtered`, {
-          params: {
-            sensor: selectedSensor,
-            startDate,
-            endDate,
-            sort: "ASC",
-          },
+          params: { sensor: selectedSensor, startDate, endDate, sort: "ASC" },
         });
 
         const sensorData = response.data.data[0];
-
         if (!sensorData || !sensorData.values?.length) {
           setSeries([]);
           return;
@@ -102,11 +85,18 @@ export const useSelectSensorChart = ({ dateLastYear, excludedSensors = [] }) => 
           y: v.value ?? null,
         }));
 
-        const minDate = new Date(data[0].x).getTime();
-        const maxDate = new Date(data[data.length - 1].x).getTime();
+        const minDate = data[0].x;
+        const maxDate = data[data.length - 1].x;
 
         setSeries([{ name: sensorData.sensor, data, color: "#1A56DB" }]);
 
+        // Calcular tickPositions iniciales
+        const tickCount = tickAmount || 13;
+        const tickPositions = Array.from({ length: tickCount }, (_, i) => 
+          minDate + ((maxDate - minDate) / (tickCount - 1)) * i
+        );
+
+        // Configuración inicial del chart
         setOptions({
           chart: {
             type: "area",
@@ -118,10 +108,7 @@ export const useSelectSensorChart = ({ dateLastYear, excludedSensors = [] }) => 
             enabled: true,
             x: {
               formatter: (value) =>
-                new Date(value).toLocaleDateString("es-ES", {
-                  day: "2-digit",
-                  month: "short",
-                }),
+                new Date(value).toLocaleDateString("es-ES", { day: "2-digit", month: "short" }),
             },
           },
           fill: {
@@ -138,16 +125,15 @@ export const useSelectSensorChart = ({ dateLastYear, excludedSensors = [] }) => 
           grid: { show: false },
           xaxis: {
             type: "datetime",
-            tickAmount: 11,
             min: minDate,
             max: maxDate,
+            tickAmount: tickCount - 1,
             labels: {
               formatter: (value) =>
-                new Date(value).toLocaleDateString("es-ES", {
-                  day: "2-digit",
-                  month: "short",
-                }),
+                new Date(value).toLocaleDateString("es-ES", { day: "2-digit", month: "short" }),
             },
+            tickPlacement: "on",
+            tickPositions: tickPositions,
           },
           yaxis: { show: true },
         });
@@ -162,6 +148,28 @@ export const useSelectSensorChart = ({ dateLastYear, excludedSensors = [] }) => 
 
     fetchData();
   }, [salesDateRange, selectedSensor, dateLastYear]);
+
+  // 🔹 Actualizar solo el tickAmount sin volver a hacer fetch
+  useEffect(() => {
+    if (!options.xaxis) return;
+
+    const { min, max } = options.xaxis;
+    if (!min || !max) return;
+
+    const tickCount = tickAmount || 13;
+    const newTickPositions = Array.from({ length: tickCount }, (_, i) => 
+      min + ((max - min) / (tickCount - 1)) * i
+    );
+
+    setOptions((prev) => ({
+      ...prev,
+      xaxis: {
+        ...prev.xaxis,
+        tickAmount: tickCount - 1,
+        tickPositions: newTickPositions,
+      },
+    }));
+  }, [tickAmount]); // ✅ Solo depende de tickAmount, no de options.xaxis
 
   return {
     options,
